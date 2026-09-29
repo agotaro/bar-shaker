@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bar Shaker</title>
+<style>
+:root{
+  --bg:#17111a; --panel:#261c2b; --panel2:#332538; --line:#4a3a50;
+  --text:#f6ecdf; --muted:#b9a7b3; --accent:#f3b95f; --good:#84d59a; --bad:#f28b8b; --info:#8fd3ff;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+#app{max-width:760px;margin:0 auto;padding:12px 16px 32px}
+header{display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px;gap:8px;flex-wrap:wrap}
+header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
+.stats{display:flex;gap:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.stats b{color:var(--accent);font-size:16px}
+
+.seats{display:grid;gap:8px;margin-bottom:10px}
+.seat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;cursor:pointer;min-height:64px;position:relative;transition:border-color .15s}
+.seat.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.seat.empty{justify-content:center;color:var(--muted);font-size:13px;cursor:default;border-style:dashed}
+.seat.done{opacity:.7}
+.seat-art{width:44px;height:44px;flex:none;position:relative}
+.seat-art svg{width:100%;height:100%;display:block}
+.seat-art .badge{position:absolute;right:-7px;bottom:-7px;font-size:17px;line-height:1}
+.seat-info{min-width:0;flex:1}
+.seat-info b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat-info b em{font-style:normal;color:var(--accent);font-size:10px;letter-spacing:-1px}
+.seat-info .so{font-size:11px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .pat{height:5px;background:var(--panel2);border-radius:99px;margin-top:5px;overflow:hidden}
+.seat .pat>div{height:100%;background:var(--good)}
+@media (max-width:480px){.seat{flex-direction:column;text-align:center;padding:8px 4px}.seat-info{width:100%}.seat-info b{font-size:12px}}
+
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.customer{display:flex;gap:14px;align-items:flex-start}
+.avatar{width:88px;height:88px;flex:none;position:relative;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+.avatar .art,.avatar .art svg{width:100%;height:100%;display:block}
+.avatar .face{position:absolute;right:-8px;bottom:-6px;font-size:28px;line-height:1}
+.cwrap{flex:1;min-width:0}
+.who{font-size:13px;color:var(--muted);margin-bottom:6px;display:flex;gap:8px;align-items:baseline;min-height:19px}
+.who b{color:var(--text);font-size:16px}
+.who .aff{color:var(--accent);font-size:12px}
+.bubble{position:relative;background:#fff8ee;color:#2a1c22;border-radius:14px;padding:12px 14px;min-height:64px;font-size:16px;line-height:1.5}
+.bubble:before{content:"";position:absolute;left:-8px;top:18px;border:8px solid transparent;border-right-color:#fff8ee;border-left:0}
+.bubble .type{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#2a1c22;color:#fff;margin-bottom:6px;letter-spacing:.05em}
+.bubble .muted{color:#8a7a80}
+.bubble .pay{margin-top:6px;font-size:14px}
+.busy{margin-top:12px}
+.busy-label{font-size:13px;color:var(--info);margin-bottom:4px}
+.busy-bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.busy-bar>div{height:100%;background:var(--info);width:0}
+
+.bar{display:flex;gap:16px;align-items:center;background:linear-gradient(180deg,#3a2a24,#2b1e1a);border:1px solid #5a4238;border-radius:16px;padding:14px;margin-bottom:12px}
+.glass{width:84px;height:120px;border:3px solid #e8dccf;border-top:none;border-radius:0 0 22px 22px;background:rgba(255,255,255,.04);display:flex;flex-direction:column-reverse;overflow:hidden;flex:none;position:relative}
+.glass .layer{height:25%}
+.glass:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.18),transparent 30%,transparent 70%,rgba(255,255,255,.08));pointer-events:none}
+.glass-side{flex:1;min-width:0}
+.glass-items{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;margin-bottom:10px}
+.chip{background:rgba(0,0,0,.25);border:1px solid #6a5048;border-radius:999px;padding:5px 10px;font-size:13px;display:flex;gap:6px;align-items:center}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.glass-items .empty{color:var(--muted);font-size:13px;align-self:center}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions button{padding:10px 16px;border-radius:12px;font-weight:700;background:rgba(0,0,0,.25);border:1px solid #6a5048}
+.actions button.primary{background:var(--accent);color:#2a1c22;border-color:transparent;flex:1}
+.actions button:disabled{opacity:.4;cursor:default}
+.subst{margin-top:8px;width:100%;padding:8px 12px;border-radius:10px;background:rgba(143,211,255,.12);border:1px dashed var(--info);color:var(--info);font-size:13px;text-align:left}
+.toast{font-size:13px;color:var(--info);min-height:18px;margin-top:8px}
+
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-bottom:12px}
+.shelf button{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;transition:transform .08s,background .2s}
+.shelf button:active{transform:scale(.95)}
+.shelf button.in{background:var(--panel2);border-color:var(--accent)}
+.shelf button.out{opacity:.45}
+.bottle{position:relative;width:22px;height:46px;display:inline-block;flex:none}
+.bottle .neck{position:absolute;top:0;left:6px;width:10px;height:10px;border-radius:3px 3px 0 0;background:var(--c);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.bottle .body{position:absolute;top:8px;left:0;right:0;bottom:0;border-radius:5px 5px 7px 7px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25);overflow:hidden}
+.bottle .liq{position:absolute;left:0;right:0;bottom:0;background:var(--c)}
+.shelf .name{font-size:13px;font-weight:600}
+.tags{display:flex;gap:3px}
+.tags span{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--panel2);color:var(--muted)}
+.cnt{font-size:11px;color:var(--muted)}
+.cnt.zero{color:var(--bad);font-weight:700}
+
+.choices{display:grid;gap:8px;margin-bottom:12px}
+.choices button{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;display:flex;justify-content:space-between;gap:10px}
+.choices button small{color:var(--muted);font-size:12px;white-space:nowrap}
+.choices button:hover{border-color:var(--accent)}
+
+details.recipes{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--muted);font-size:14px}
+details.recipes summary{cursor:pointer;color:var(--text);font-weight:600}
+.recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 16px;margin-top:10px}
+.recipe-grid div b{color:var(--text)}
+.legend{margin-top:12px;font-size:12px;line-height:1.6}
+
+.overlay{position:fixed;inset:0;background:rgba(12,8,14,.88);display:flex;justify-content:center;align-items:flex-start;padding:20px;z-index:10;overflow:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:26px 24px;max-width:500px;width:100%;text-align:center;margin:auto}
+.card h1{margin:0 0 6px;font-size:26px}
+.card h3{margin:14px 0 6px;font-size:16px}
+.card hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+.card p{color:var(--muted);line-height:1.7;margin:8px 0}
+.card .big{font-size:40px;color:var(--accent);font-weight:800;margin:6px 0}
+.card button{margin-top:10px;padding:12px 28px;border-radius:12px;background:var(--accent);color:#2a1c22;font-weight:700;font-size:16px}
+.card button.ghost{background:var(--panel2);color:var(--text);font-size:14px;padding:10px 18px}
+.card button:disabled{opacity:.4;cursor:default}
+.card .diffs{display:grid;gap:8px;margin-top:6px}
+.card button.diff{display:flex;flex-direction:column;align-items:flex-start;text-align:left;background:var(--panel2);color:var(--text);padding:10px 14px;margin:0;border:1px solid var(--line)}
+.card button.diff small{color:var(--muted);font-weight:400;font-size:12px;line-height:1.5}
+.card button.diff:hover{border-color:var(--accent)}
+.card button.diff.sel{border-color:var(--accent);background:#3b2a45;box-shadow:0 0 0 1px var(--accent)}
+.card p.sec{margin:12px 0 4px;text-align:left;font-size:13px;color:var(--text);font-weight:700}
+.rank{font-size:56px;font-weight:900;color:var(--accent);line-height:1}
+.lineup{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0 6px}
+.mini{position:relative;width:46px;height:46px}
+.mini svg{width:100%;height:100%;display:block}
+.mini span{position:absolute;right:-6px;bottom:-6px;font-size:17px;line-height:1}
+.mini .st{position:static;display:block;font-size:9px;color:var(--accent);text-align:center;letter-spacing:-1px}
+.cast{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 4px}
+.cast .mini{width:38px;height:38px}
+.notes{font-size:13px;color:var(--muted);line-height:1.7;margin-top:6px}
+.restock{text-align:left;margin-top:8px;max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.rrow{display:grid;grid-template-columns:22px 1fr 46px 48px auto auto;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.rrow:last-child{border-bottom:none}
+.rrow .bottle{transform:scale(.7);transform-origin:left center;height:40px}
+.rrow .rs{color:var(--muted);font-variant-numeric:tabular-nums}
+.rrow .rs.zero{color:var(--bad);font-weight:700}
+.rrow .rp{color:var(--muted);font-variant-numeric:tabular-nums}
+.card .rrow button{padding:4px 9px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);font-size:12px;margin:0;color:var(--text)}
+
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.pop{animation:pop .3s}
+@keyframes pop{0%{transform:scale(.96);opacity:.4}100%{transform:scale(1);opacity:1}}
+.enter{animation:enter .4s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes enter{0%{transform:translateY(14px) scale(.85);opacity:0}100%{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title">🍸 Bar Shaker</div>
+    <div class="stats"><span>夜 <b id="night">1</b>/7</span><span>今夜 <b id="sales">¥0</b></span><span>所持金 <b id="money">¥0</b></span></div>
+  </header>
+
+  <section class="seats" id="seats"></section>
+
+  <section class="stage" id="stage">
+    <div class="customer">
+      <div class="avatar" id="avatar"><div class="art" id="avatarArt"></div><span class="face" id="face"></span></div>
+      <div class="cwrap">
+        <div class="who"><b id="cname"></b><span id="ctitle"></span><span class="aff" id="caff"></span></div>
+        <div class="bubble" id="bubble"><div class="muted">…</div></div>
+      </div>
+    </div>
+    <div class="busy" id="busy" hidden><div class="busy-label" id="busyLabel"></div><div class="busy-bar"><div id="busyBar"></div></div></div>
+  </section>
+
+  <section class="bar" id="bar">
+    <div class="glass" id="glass"></div>
+    <div class="glass-side">
+      <div class="glass-items" id="glassItems"></div>
+      <div class="actions">
+        <button id="serve" class="primary">提供する</button>
+        <button id="clear">捨てる</button>
+      </div>
+      <button id="subst" class="subst" hidden></button>
+      <div class="toast" id="toast"></div>
+    </div>
+  </section>
+
+  <section class="shelf" id="shelf"></section>
+  <section class="choices" id="choices" hidden></section>
+
+  <details class="recipes" id="recipes">
+    <summary>📖 レシピ帳</summary>
+    <div class="recipe-grid" id="recipeList"></div>
+    <div class="legend">素材の特徴: 強=アルコール / 甘 / 酸 / 爽=さっぱり / 苦 / 果=フルーティ。ふわっとした注文は、この特徴の合計で判定されます。※レシピはお店独自の簡易版です。</div>
+  </details>
+
+  <div class="overlay" id="overlay"><div class="card" id="card"></div></div>
+</div>
+<script>
+/* ---------- キャラクター ---------- */
+const CHARS=[
+{id:'tanaka',likes:['fresh'],hates:['sweet'],pref:'さっぱりしたのが好きで、甘いのは苦手です。',name:'田中',title:'疲れた会社員',lines:{ok:'…はぁ、うまい。生き返る',meh:'まあ、いいです…疲れてるんで',ng:'違う…けど、もういいです…'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-tanaka"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#3d4a6b"/><g clip-path="url(#cp-tanaka)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#232b45"/>
+<path d="M33 54 L40 70 L47 54Z" fill="#fff"/>
+<path d="M38 56 L42 56 L44 68 L40 74 L36 68Z" fill="#c0392b" transform="rotate(10 40 62)"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 31 Q21 12 40 12 Q59 12 59 31 Q55 22 47 23 Q42 27 34 23 Q26 22 21 31Z" fill="#2b2b2b"/>
+<path d="M28 15 L25 9 M39 12 L40 5 M51 15 L55 9" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+<circle cx="33" cy="35" r="5.2" fill="none" stroke="#333" stroke-width="1.6"/>
+<circle cx="47" cy="35" r="5.2" fill="none" stroke="#333" stroke-width="1.6"/>
+<path d="M38.2 35 L41.8 35" stroke="#333" stroke-width="1.6"/>
+<path d="M30.5 35.5 L35.5 35.5 M44.5 35.5 L49.5 35.5" stroke="#333" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M30 40.5 Q33 42.5 36 40.5 M44 40.5 Q47 42.5 50 40.5" stroke="#c39a82" stroke-width="1.3" fill="none"/>
+<path d="M36 46 Q40 44.5 44 46" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+
+{id:'rina',likes:['sweet','fruity'],hates:['bitter'],pref:'甘くてフルーティなやつ！苦いのはムリ。',name:'リナ',title:'パリピ',lines:{ok:'ヤバい！映える！',meh:'んー、ビミョー？',ng:'え、なにこれ。ウケないんだけど'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-rina"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#ff8fb1"/><g clip-path="url(#cp-rina)">
+<path d="M10 34 Q8 8 40 8 Q72 8 70 34 L72 86 L8 86Z" fill="#ffc857"/>
+<path d="M12 86 Q14 58 40 56 Q66 58 68 86Z" fill="#ffd93d"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 30 Q22 12 40 12 Q58 12 59 30 Q52 18 40 24 Q30 30 21 30Z" fill="#ffc857"/>
+<circle cx="32" cy="35" r="6.5" fill="#ff3d7f" opacity=".85"/>
+<circle cx="48" cy="35" r="6.5" fill="#ff3d7f" opacity=".85"/>
+<path d="M38.5 35 L41.5 35 M25.5 34 L21 32 M54.5 34 L59 32" stroke="#ff3d7f" stroke-width="2"/>
+<circle cx="30" cy="33" r="1.8" fill="#fff" opacity=".8"/>
+<circle cx="46" cy="33" r="1.8" fill="#fff" opacity=".8"/>
+<path d="M33 44 Q40 52 47 44Z" fill="#c0392b"/>
+<path d="M35 44.5 Q40 47 45 44.5Z" fill="#fff"/>
+<circle cx="21" cy="43" r="3" fill="none" stroke="#f5b400" stroke-width="1.6"/>
+<circle cx="59" cy="43" r="3" fill="none" stroke="#f5b400" stroke-width="1.6"/>
+</g></svg>`},
+
+{id:'gen',likes:['strong','bitter'],hates:['sweet'],pref:'強くて苦いのがいい。甘いのは要らん。',name:'源さん',title:'常連の老人',lines:{ok:'ふむ。腕を上げたな',meh:'昔のマスターは一発だったがね',ng:'…はぁ。ワシの若い頃はな'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-gen"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#8b6f47"/><g clip-path="url(#cp-gen)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5b3f1f"/>
+<path d="M33 54 L40 68 L47 54Z" fill="#f5f0e6"/>
+<rect x="34" y="44" width="12" height="12" fill="#e2b48e"/>
+<circle cx="40" cy="32" r="19" fill="#f0c9a0"/>
+<path d="M24 38 Q26 58 40 60 Q54 58 56 38 Q50 48 40 48 Q30 48 24 38Z" fill="#e8e8e8"/>
+<circle cx="29" cy="39" r="3.5" fill="#f4a3a3" opacity=".7"/>
+<circle cx="51" cy="39" r="3.5" fill="#f4a3a3" opacity=".7"/>
+<path d="M29 34 Q33 30 37 34 M43 34 Q47 30 51 34" stroke="#4a3a2a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<path d="M27 29 Q33 26 38 29 M42 29 Q47 26 53 29" stroke="#eee" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M40 36 Q43 41 39 41" stroke="#c7906a" stroke-width="1.5" fill="none"/>
+<path d="M35 44 Q40 47.5 45 44" stroke="#8a5a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M19 30 Q20 10 40 11 Q60 10 61 30 Q40 22 19 30Z" fill="#4b3621"/>
+<path d="M19 30 Q40 24 61 30 L63 33 Q40 27 17 33Z" fill="#3a2917"/>
+</g></svg>`},
+
+{id:'holmes',likes:['bitter'],hates:['fruity'],pref:'苦味のあるものを。果物は好まない。',name:'ホームズ',title:'探偵',lines:{ok:'…完璧だ。証拠は要らない',meh:'惜しいな。何かが足りない',ng:'犯人は、お前だ'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-holmes"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#2f3e46"/><g clip-path="url(#cp-holmes)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#a0793d"/>
+<path d="M26 54 L40 66 L54 54 L58 62 L40 74 L22 62Z" fill="#8a6730"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f1cfae"/>
+<path d="M29 35 L36 35 M44 35 L51 35" stroke="#333" stroke-width="2" stroke-linecap="round"/>
+<path d="M28 31 L37 32.5 M52 31 L43 32.5" stroke="#3a2a1a" stroke-width="2" stroke-linecap="round"/>
+<path d="M32 42 Q36 39 40 42 Q44 39 48 42 Q44 45 40 43 Q36 45 32 42Z" fill="#3a2a1a"/>
+<path d="M37 47 L43 47" stroke="#a0674f" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M22 26 Q22 8 40 8 Q58 8 58 26Z" fill="#3b2f2f"/>
+<path d="M23 21 Q40 18 57 21 L57 26 Q40 23 23 26Z" fill="#6b1e1e"/>
+<ellipse cx="40" cy="26" rx="26" ry="4" fill="#3b2f2f"/>
+</g></svg>`},
+
+{id:'mei',likes:['sweet'],hates:['strong'],pref:'甘いのが好きです。強いお酒はちょっと…',name:'メイ',title:'大学生',lines:{ok:'わー！おいしい！',meh:'あ、うん、ありがとうございます…',ng:'…泣きそう'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-mei"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#f4a261"/><g clip-path="url(#cp-mei)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#4f8a5b"/>
+<path d="M33 54 L40 64 L47 54Z" fill="#fff"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<path d="M17 30 Q17 8 40 8 Q63 8 63 30 L63 52 Q40 58 17 52Z" fill="#4a2c2a"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 32 Q21 12 40 12 Q59 12 59 32 Q56 24 50 26 Q40 22 30 26 Q24 24 21 32Z" fill="#4a2c2a"/>
+<path d="M17 22 Q20 2 44 5 Q62 8 60 19 Q40 12 17 22Z" fill="#c0392b"/>
+<circle cx="44" cy="4.5" r="2.2" fill="#c0392b"/>
+<ellipse cx="33" cy="36" rx="3.6" ry="4.2" fill="#3a2a1a"/>
+<ellipse cx="47" cy="36" rx="3.6" ry="4.2" fill="#3a2a1a"/>
+<circle cx="34.3" cy="34.5" r="1.3" fill="#fff"/>
+<circle cx="48.3" cy="34.5" r="1.3" fill="#fff"/>
+<circle cx="28" cy="41" r=".8" fill="#d9a07a"/><circle cx="31" cy="42.5" r=".8" fill="#d9a07a"/><circle cx="49" cy="42.5" r=".8" fill="#d9a07a"/><circle cx="52" cy="41" r=".8" fill="#d9a07a"/>
+<path d="M36 45 Q40 48 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+
+{id:'robo',likes:['sour','fresh'],hates:['sweet'],pref:'酸味ト爽快感ヲ要求。糖分ハ不要。',name:'RB-7',title:'試飲ロボット',lines:{ok:'評価：最適解。',meh:'評価：許容範囲内。',ng:'エラー。注文ト一致シマセン。'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-robo"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#4e6e8e"/><g clip-path="url(#cp-robo)">
+<rect x="14" y="56" width="52" height="40" rx="8" fill="#9fb3c8"/>
+<rect x="30" y="61" width="20" height="9" rx="2" fill="#5c7a99"/>
+<rect x="35" y="46" width="10" height="12" fill="#7f95ad"/>
+<path d="M40 14 L40 6" stroke="#7f95ad" stroke-width="2.5"/>
+<circle cx="40" cy="5" r="3" fill="#ff4f4f"/>
+<rect x="20" y="14" width="40" height="36" rx="9" fill="#c9d6e3"/>
+<rect x="24" y="19" width="32" height="27" rx="6" fill="#5c7a99"/>
+<circle cx="32" cy="30" r="4" fill="#4ff0e0"/><circle cx="48" cy="30" r="4" fill="#4ff0e0"/>
+<circle cx="32" cy="30" r="1.5" fill="#fff"/><circle cx="48" cy="30" r="1.5" fill="#fff"/>
+<rect x="31" y="38" width="3" height="4" fill="#4ff0e0"/><rect x="36" y="38" width="3" height="4" fill="#4ff0e0"/><rect x="41" y="38" width="3" height="4" fill="#4ff0e0"/><rect x="46" y="38" width="3" height="4" fill="#4ff0e0"/>
+<circle cx="18" cy="32" r="3" fill="#7f95ad"/><circle cx="62" cy="32" r="3" fill="#7f95ad"/>
+</g></svg>`},
+
+{id:'nyanta',likes:['fruity'],hates:['strong'],pref:'ニャ（果物が好き。お酒は弱い）',name:'ニャン太',title:'看板猫（客側）',lines:{ok:'ニャ〜〜！',meh:'ニャ…',ng:'フシャーッ！'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-nyanta"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#f2c14e"/><g clip-path="url(#cp-nyanta)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f39c3d"/>
+<path d="M30 56 Q40 70 50 56 L50 86 L30 86Z" fill="#fff4e0"/>
+<path d="M31 54 L39 58 L31 62Z M49 54 L41 58 L49 62Z" fill="#2c3e50"/>
+<circle cx="40" cy="58" r="2" fill="#2c3e50"/>
+<path d="M22 30 L24 10 L38 20Z" fill="#f39c3d"/>
+<path d="M58 30 L56 10 L42 20Z" fill="#f39c3d"/>
+<path d="M25 27 L26 15 L35 21Z" fill="#f7a8b8"/>
+<path d="M55 27 L54 15 L45 21Z" fill="#f7a8b8"/>
+<ellipse cx="40" cy="34" rx="20" ry="18" fill="#f39c3d"/>
+<path d="M36 17 L38 24 M40 16 L40 24 M44 17 L42 24" stroke="#d9782a" stroke-width="2.2" stroke-linecap="round"/>
+<ellipse cx="40" cy="42" rx="9" ry="6" fill="#fff4e0"/>
+<ellipse cx="32" cy="33" rx="3.5" ry="4.5" fill="#7bd36b"/>
+<ellipse cx="48" cy="33" rx="3.5" ry="4.5" fill="#7bd36b"/>
+<ellipse cx="32" cy="33" rx="1.2" ry="3.6" fill="#222"/>
+<ellipse cx="48" cy="33" rx="1.2" ry="3.6" fill="#222"/>
+<path d="M38 40 L42 40 L40 43Z" fill="#f28ca0"/>
+<path d="M40 43 L40 45 M40 45 Q37 47 35 45 M40 45 Q43 47 45 45" stroke="#a0674f" stroke-width="1.2" fill="none"/>
+<path d="M28 41 L18 39 M28 44 L18 46 M52 41 L62 39 M52 44 L62 46" stroke="#a0674f" stroke-width="1.2" stroke-linecap="round"/>
+</g></svg>`},
+
+{id:'vlad',likes:['strong'],hates:['fresh'],pref:'強いものを。爽やかなのは性に合わん。',name:'ヴラド',title:'吸血鬼（夜勤明け）',lines:{ok:'ふふ…血より旨い',meh:'悪くない。血には劣るが',ng:'貴様、闇に葬るぞ'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-vlad"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#3a0f2e"/><g clip-path="url(#cp-vlad)">
+<path d="M14 62 L22 26 L40 48 L58 26 L66 62Z" fill="#1a0b16"/>
+<path d="M18 60 L25 32 L40 50 L55 32 L62 60Z" fill="#8b1a2b"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#1a0b16"/>
+<path d="M33 54 L40 66 L47 54Z" fill="#fff"/>
+<path d="M36 58 L44 58 L40 66Z" fill="#8b1a2b"/>
+<rect x="34" y="44" width="12" height="12" fill="#d8d0e0"/>
+<circle cx="40" cy="32" r="19" fill="#e9e4f0"/>
+<path d="M21 30 Q21 12 40 12 Q59 12 59 30 Q52 20 40 28 Q28 20 21 30Z" fill="#111"/>
+<path d="M28 30 L36 32 M52 30 L44 32" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>
+<circle cx="33" cy="36" r="2.6" fill="#e03131"/><circle cx="47" cy="36" r="2.6" fill="#e03131"/>
+<circle cx="33" cy="36" r="1" fill="#111"/><circle cx="47" cy="36" r="1" fill="#111"/>
+<path d="M34 44 Q40 49 46 44" stroke="#5a1a2b" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M36 45 L37.5 49.5 L39 45.5Z M44 45 L42.5 49.5 L41 45.5Z" fill="#fff"/>
+</g></svg>`},
+
+{id:'mira',likes:['sweet','sour'],hates:['bitter'],pref:'甘酸っぱいのが好みよ。苦いのは呪うわ。',name:'ミラ',title:'魔女（自称）',lines:{ok:'これぞ魔法の一杯ね',meh:'呪文が一つ抜けてるわ',ng:'カエルにされたい？'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-mira"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#5b3a8e"/><g clip-path="url(#cp-mira)">
+<path d="M12 34 Q10 8 40 8 Q70 8 68 34 L72 86 L8 86Z" fill="#2aa198"/>
+<path d="M12 86 Q14 58 40 56 Q66 58 68 86Z" fill="#3d2566"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 31 Q21 12 40 12 Q59 12 59 31 Q54 24 44 26 Q36 20 21 31Z" fill="#2aa198"/>
+<ellipse cx="33" cy="36.5" rx="2.8" ry="2.4" fill="#6a2c91"/>
+<ellipse cx="47" cy="36.5" rx="2.8" ry="2.4" fill="#6a2c91"/>
+<path d="M29 34 Q33 32 37 34 M43 34 Q47 32 51 34" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<circle cx="44.5" cy="43" r=".9" fill="#5a3a2a"/>
+<path d="M35 45 Q41 48 45 44" stroke="#a0475f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M26 22 L44 0 L56 22Z" fill="#1c1030"/>
+<ellipse cx="40" cy="22" rx="24" ry="5" fill="#1c1030"/>
+<path d="M30 21 Q40 18 52 21 L51 16 Q40 13 31 16Z" fill="#8e44ad"/>
+<rect x="38.5" y="14.5" width="5" height="5" fill="#f3b95f"/>
+<path d="M63 11 l1.5 3 3 .4 -2.2 2.1 .6 3.1 -2.9 -1.5 -2.9 1.5 .6 -3.1 -2.2 -2.1 3 -.4z" fill="#f3b95f"/>
+</g></svg>`},
+
+{id:'pi',likes:['fruity','fresh'],hates:['bitter'],pref:'果物ト爽ヤカサ、求ム。苦味、拒否。',name:'ピー',title:'地球観光中',lines:{ok:'地球ノ飲ミ物、最高',meh:'母星ノほうガ美味シイ',ng:'侵略、決定'},svg:`
+<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-pi"><circle cx="40" cy="40" r="40"/></clipPath></defs>
+<circle cx="40" cy="40" r="40" fill="#0b3d3d"/><g clip-path="url(#cp-pi)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#8fa3b0"/>
+<rect x="34" y="44" width="12" height="12" fill="#6cc24a"/>
+<path d="M32 54 L40 63 L48 54Z" fill="#5c7a99"/>
+<path d="M30 16 Q26 8 22 6 M50 16 Q54 8 58 6" stroke="#6cc24a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<circle cx="22" cy="5" r="3" fill="#b8ff6b"/><circle cx="58" cy="5" r="3" fill="#b8ff6b"/>
+<ellipse cx="40" cy="30" rx="20" ry="20" fill="#7ed957"/>
+<path d="M22 34 Q40 60 58 34Z" fill="#7ed957"/>
+<ellipse cx="32" cy="32" rx="6" ry="8" transform="rotate(-15 32 32)" fill="#111"/>
+<ellipse cx="48" cy="32" rx="6" ry="8" transform="rotate(15 48 32)" fill="#111"/>
+<ellipse cx="30" cy="29" rx="1.8" ry="2.5" fill="#fff" opacity=".9"/>
+<ellipse cx="46" cy="29" rx="1.8" ry="2.5" fill="#fff" opacity=".9"/>
+<path d="M37 45 Q40 47 43 45" stroke="#3f8f2f" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+];
+const CHAR_BY_ID=Object.fromEntries(CHARS.map(c=>[c.id,c]));
+
+/* ---------- 素材・レシピ ---------- */
+const TAGL={strong:'強',sweet:'甘',sour:'酸',fresh:'爽',bitter:'苦',fruity:'果'};
+const TAGWORD={strong:'強い',sweet:'甘い',sour:'酸っぱい',fresh:'さっぱりした',bitter:'苦い',fruity:'フルーティな'};
+const ING=[
+  {id:'gin',    name:'ジン',           color:'#dfe9f0', cap:6, price:160, tags:{strong:3,bitter:1}},
+  {id:'vodka',  name:'ウォッカ',       color:'#eef2f5', cap:6, price:160, tags:{strong:3}},
+  {id:'rum',    name:'ラム',           color:'#c98a4b', cap:6, price:160, tags:{strong:3,sweet:1}},
+  {id:'tequila',name:'テキーラ',       color:'#e9d8a6', cap:5, price:180, tags:{strong:3}},
+  {id:'whisky', name:'ウイスキー',     color:'#b5651d', cap:5, price:180, tags:{strong:3,bitter:1}},
+  {id:'tonic',  name:'トニック',       color:'#d9f3f0', cap:8, price:60,  tags:{fresh:2,bitter:1}},
+  {id:'soda',   name:'ソーダ',         color:'#e6f7ff', cap:8, price:50,  tags:{fresh:2}},
+  {id:'ginger', name:'ジンジャーエール',color:'#f1d58a', cap:6, price:60,  tags:{fresh:1,sweet:1}},
+  {id:'cola',   name:'コーラ',         color:'#3b2418', cap:6, price:60,  tags:{sweet:2}},
+  {id:'orange', name:'オレンジ',       color:'#ffa53a', cap:6, price:80,  tags:{sweet:1,fruity:2}},
+  {id:'cran',   name:'クランベリー',   color:'#c8324e', cap:5, price:90,  tags:{sour:1,fruity:2}},
+  {id:'lime',   name:'ライム',         color:'#a6e05a', cap:6, price:80,  tags:{sour:2,fresh:1}},
+  {id:'mint',   name:'ミント',         color:'#5fcf8a', cap:5, price:70,  tags:{fresh:2}},
+  {id:'syrup',  name:'シロップ',       color:'#ff6b9d', cap:6, price:50,  tags:{sweet:3}},
+];
+const BY_ID=Object.fromEntries(ING.map(i=>[i.id,i]));
+
+const COCKTAILS=[
+  {name:'ジントニック', ings:['gin','tonic']},
+  {name:'ギムレット', ings:['gin','lime']},
+  {name:'ジンバック', ings:['gin','lime','ginger']},
+  {name:'スクリュードライバー', ings:['vodka','orange']},
+  {name:'モスコミュール', ings:['vodka','lime','ginger']},
+  {name:'コスモポリタン', ings:['vodka','cran','lime']},
+  {name:'キューバリブレ', ings:['rum','cola','lime']},
+  {name:'モヒート', ings:['rum','lime','mint','soda']},
+  {name:'テキーラサンライズ', ings:['tequila','orange','syrup']},
+  {name:'マルガリータ', ings:['tequila','lime','syrup']},
+  {name:'ハイボール', ings:['whisky','soda']},
+  {name:'ジンジャーハイボール', ings:['whisky','ginger']},
+  {name:'シャーリーテンプル', ings:['ginger','syrup'], na:true},
+  {name:'オレンジソーダ', ings:['orange','soda'], na:true},
+];
+
+/* ---------- ふわっとした注文 ---------- */
+const ABSTRACT=[
+  {text:'さっぱりしたのを一杯。', who:['tanaka','holmes','mei'], want:{fresh:2}, max:{sweet:1}, ok:'あー、生き返る〜', ng:'んー、さっぱりしないなあ'},
+  {text:'とにかく強いやつ、頼む。', who:['gen','vlad','holmes'], want:{strong:5}, ok:'ゴホッ…これだよこれ', ng:'弱い、弱いよ'},
+  {text:'甘くてかわいいのがいい！', who:['rina','mei','mira'], want:{sweet:3}, max:{strong:3,bitter:0}, ok:'かわいい〜！写真撮っていい？', ng:'思ってたのと違う…'},
+  {text:'明日早いから、酔わないやつで。', who:['holmes','robo','mei','tanaka'], max:{strong:0}, ok:'助かる、ありがとう', ng:'ちょっと、酒入ってるじゃん！'},
+  {text:'失恋したんだ…察して。', who:['tanaka','mei','mira'], want:{strong:3,bitter:1}, soloOk:true, ok:'…ありがとう。わかってくれるんだね', ng:'…わかってないな'},
+  {text:'夏っぽいの！', who:['rina','nyanta','pi'], want:{fresh:2}, any:{fruity:1,sour:1}, ok:'海が見える…', ng:'夏、どこ？'},
+  {text:'大人の味ってやつ、ある？', who:['holmes','gen','vlad'], want:{strong:3,bitter:1}, max:{sweet:1}, ok:'ふっ、渋いね', ng:'子供っぽいなあ'},
+  {text:'フルーツたっぷりで。', who:['pi','nyanta','rina'], want:{fruity:3}, ok:'ビタミン補給！', ng:'果物、どこ？'},
+  {text:'スッキリ酸っぱいの。', who:['nyanta','mira','robo'], want:{sour:2,fresh:1}, ok:'キュッとくる！', ng:'酸味が足りないなあ'},
+  {text:'軽めのやつ。ジュースじゃなくてね。', who:['tanaka','mei','mira'], want:{strong:3}, max:{strong:3}, ok:'ちょうどいい', ng:'重いって'},
+];
+
+/* ---------- 無茶ぶり ---------- */
+const WILD=[
+  {text:'ねえ、歌を歌ってくれない？', who:['rina','gen','pi'], choices:[
+    {label:'♪ 熱唱する', tip:300, line:'上手い！…いや下手だけど最高！', busy:'熱唱中…'},
+    {label:'ハミングでごまかす', tip:100, line:'まあ…雰囲気は出てるね', busy:'ハミング中…'},
+    {label:'シェイカーをリズミカルに振る', tip:200, line:'なにそれ、かっこいい', busy:'シャカシャカ…'},
+    {label:'丁重にお断りする', tip:0, line:'つれないなあ'},
+  ]},
+  {text:'人生相談、乗ってくれる？', who:['tanaka','mei','vlad'], choices:[
+    {label:'黙って最後まで聞く', tip:300, line:'ありがとう。少し楽になったよ', busy:'傾聴中…'},
+    {label:'自分の失敗談で返す', tip:200, line:'バーテンダーも大変なんだね…ふふ', busy:'昔話中…'},
+    {label:'とりあえず氷を足す', tip:100, line:'…まあ、頭は冷えたよ'},
+    {label:'占い師を紹介する', tip:50, line:'そういうことじゃないんだよなあ'},
+  ]},
+  {text:'私の名前、当ててみて。', who:['gen','holmes','tanaka'], choices:[
+    {label:'「田中さん！」', guess:'田中', outcomes:[{p:.3,tip:500,line:'えっ、なんで知ってるの！？'},{p:.7,tip:100,line:'違うけど、ノリはいいね'}]},
+    {label:'「…常連さんの顔ですね」', tip:200, line:'うまく逃げたな'},
+    {label:'名札を探す', tip:50, line:'名札なんて付けてないよ'},
+    {label:'「マスターと呼ばせてください」', tip:150, line:'私が客なんだけど'},
+  ]},
+  {text:'手品、見せてよ。', who:['mei','pi','nyanta'], choices:[
+    {label:'コインを消す（袖に隠す）', tip:200, line:'お、王道', busy:'手品中…'},
+    {label:'ライムを消す（食べる）', tip:300, line:'ははは、それ手品じゃない', busy:'もぐもぐ…'},
+    {label:'自分が消える（裏に引っ込む）', tip:50, line:'おーい、戻ってきて'},
+    {label:'グラスを消す（片付ける）', tip:100, line:'それはただの片付け'},
+  ]},
+  {text:'ジャグリングして！', who:['rina','robo','pi'], choices:[
+    {label:'ボトルで挑戦する', outcomes:[{p:.5,tip:500,line:'すげえ！！'},{p:.5,tip:-200,line:'ガシャーン…あ、弁償ね'}], busy:'ジャグリング中…'},
+    {label:'ライムで挑戦する', tip:200, line:'安全策だね。でも上手い', busy:'ジャグリング中…'},
+    {label:'氷でジャグリング', tip:150, line:'つ、冷たそう', busy:'ジャグリング中…'},
+    {label:'やめておく', tip:0, line:'ちぇっ'},
+  ]},
+  {text:'元気が出る一言、ちょうだい。', who:['tanaka','mei','mira'], choices:[
+    {label:'「明日は明日の風が吹く」', tip:200, line:'…そうだね'},
+    {label:'「乾杯！」', tip:300, line:'それでいい。それがいい'},
+    {label:'「頑張れ」', tip:100, line:'頑張ってるんだけどなあ'},
+    {label:'無言で肩を叩く', tip:250, line:'…うん'},
+  ]},
+  {text:'犬の真似して。', who:['nyanta','vlad','robo'], choices:[
+    {label:'「ワン！」', tip:200, line:'かわいい'},
+    {label:'お座りする', tip:300, line:'めっちゃ従順', busy:'お座り中…'},
+    {label:'「にゃー」', tip:150, line:'それ猫'},
+    {label:'無視して氷を砕く', tip:50, line:'冷たいなあ'},
+  ]},
+  {text:'SNSに載せたいから、決めポーズして！', who:['rina','mira','pi'], choices:[
+    {label:'キメ顔', tip:200, line:'いいね稼げそう', busy:'撮影中…'},
+    {label:'グラスを掲げる', tip:300, line:'映える！', busy:'撮影中…'},
+    {label:'シェイカーを高く掲げる', tip:250, line:'プロっぽい！', busy:'撮影中…'},
+    {label:'顔を隠す', tip:50, line:'シャイだなあ'},
+  ]},
+  {text:'一発ギャグやって。', who:['tanaka','gen','holmes'], choices:[
+    {label:'シェイカーを振りながら「シェケナベイベー」', tip:300, line:'古い！でも笑った', busy:'シェケナ中…'},
+    {label:'「氷は…懲りました」', tip:150, line:'うーん'},
+    {label:'真顔で見つめ返す', tip:200, line:'それが一番おもしろい', busy:'凝視中…'},
+    {label:'断る', tip:0, line:'ノリ悪いなあ'},
+  ]},
+];
+
+/* ---------- 定数 ---------- */
+const NIGHTS=7, MAX=4;
+const DIFF={
+  novice:{name:'見習い',desc:'レシピ帳あり。客は同時に2人まで。',seats:2,book:true,tell:true,pat:1.2,extra:0,rent:600},
+  pro:{name:'一人前',desc:'レシピ帳なし。初めての注文だけ、客が作り方を教えてくれる。同時に3人。',seats:3,book:false,tell:'once',pat:1,extra:0,rent:800},
+  master:{name:'マスター',desc:'ヒントなし。客は多め、機嫌は短め。同時に3人。',seats:3,book:false,tell:false,pat:0.8,extra:2,rent:1000},
+};
+const ECON={
+  easy:{name:'のんびり',desc:'家賃なし。仕入れも安い。お金の心配をせず、客と遊ぶ。',rent:0,price:0.7,rank:1.6},
+  normal:{name:'普通',desc:'毎晩の家賃あり。払えなければ閉店。',rent:1,price:1,rank:1},
+  hard:{name:'シビア',desc:'家賃が高く、仕入れも高い。赤字は即閉店。',rent:1.8,price:1.25,rank:0.8},
+};
+const PATIENCE={named:30,abstract:25,omakase:25,wild:20,repeat:30,usual:30,variant:30,substitute:25};
+const BADGE={perfect:'😆',partial:'😐',fail:'😠',left:'💨'};
+const SAVE_KEY='barshaker.v2';
+
+const $=id=>document.getElementById(id);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const yen=n=>'¥'+n.toLocaleString();
+function profile(glass){const p={};glass.forEach(i=>{for(const k in i.tags)p[k]=(p[k]||0)+i.tags[k]});return p}
+function matchCocktail(glass){const ids=glass.map(i=>i.id).sort().join(',');return COCKTAILS.find(c=>c.ings.slice().sort().join(',')===ids)}
+function bottleHtml(ing){const st=G?G.stock[ing.id]:ing.cap;const lv=Math.round(100*st/ing.cap);return `<span class="bottle" style="--c:${ing.color}"><i class="neck"></i><i class="body"><i class="liq" style="height:${lv}%"></i></i></span>`}
+
+/* ---------- 状態 ---------- */
+let G=null, D=null, E=null, N=null;
+const rentNow=()=>Math.round(D.rent*E.rent);
+const priceOf=i=>Math.round(i.price*E.price/10)*10;
+
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
+function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;if(g&&!ECON[g.econ])g.econ='normal';return g&&DIFF[g.diff]?g:null}catch(e){return null}}
+function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
+function initMem(){CHARS.forEach(c=>{if(!G.mem[c.id])G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false}})}
+
+function newGame(diff,econ){
+  G={diff,econ:econ||'normal',night:1,money:1000,stock:{},mem:{},learned:{},history:[]};
+  ING.forEach(i=>G.stock[i.id]=i.cap);
+  initMem(); save(); startNight();
+}
+function continueGame(s){G=s;initMem();startNight()}
+
+/* ---------- 注文の生成 ---------- */
+const namedOrder=()=>{const c=rnd(COCKTAILS);return {kind:'named',cocktail:c,text:`${c.name}、ひとつ。`,label:'カクテル',summary:c.name,pay:450}};
+function makeOrder(ch,m){
+  if(m.last&&m.last.length&&Math.random()<0.6){
+    const r=Math.random();
+    if(m.aff>=2&&r<0.45) return {kind:'usual',glass:m.last,text:'いつもの。',label:'常連',summary:'いつもの',pay:520};
+    if(r<0.75||m.last.length>=MAX) return {kind:'repeat',glass:m.last,text:'また来たよ。前回と同じの、もう一杯。',label:'前回と同じ',summary:'前回と同じ',pay:480};
+    const [tag,word]=rnd([['strong','強めで'],['sweet','甘めで'],['fresh','さっぱりめで']]);
+    return {kind:'variant',glass:m.last,tag,text:`前回のやつを、もう少し${word}。`,label:'前回＋α',summary:'前回＋'+word.replace('で',''),pay:520};
+  }
+  const r=Math.random();
+  const absC=ABSTRACT.filter(a=>a.who.includes(ch.id)), wildC=WILD.filter(w=>w.who.includes(ch.id));
+  if(r<0.45) return namedOrder();
+  if(r<0.65&&absC.length){const d=rnd(absC);return {kind:'abstract',def:d,text:d.text,label:'ふわっとした注文',summary:'ふわっと',pay:450}}
+  if(r<0.78) return {kind:'omakase',text:'おまかせで。',label:'おまかせ',summary:'おまかせ',pay:450};
+  const w=rnd(wildC.length?wildC:WILD);
+  return {kind:'wild',def:w,text:w.text,label:'無茶ぶり',summary:'無茶ぶり'};
+}
+
+function buildNight(){
+  const count=Math.min(CHARS.length,7+G.night+D.extra);
+  let pool=CHARS.filter(c=>!G.mem[c.id].skip);
+  if(pool.length<3) pool=CHARS.slice();
+  CHARS.forEach(c=>{G.mem[c.id].skip=false});
+  pool=pool.map(c=>({c,w:G.mem[c.id].aff+Math.random()*3})).sort((a,b)=>b.w-a.w).map(x=>x.c);
+  const cast=pool.slice(0,count);
+  let wild=0;
+  const queue=shuffle(cast).map(ch=>{
+    let o=makeOrder(ch,G.mem[ch.id]);
+    if(o.kind==='wild'){wild++;if(wild>3)o=namedOrder()}
+    return {char:ch,order:o};
+  });
+  if(G.night===1){const i=queue.findIndex(q=>q.order.kind==='named');if(i>0)[queue[0],queue[i]]=[queue[i],queue[0]]}
+  return queue;
+}
+
+/* ---------- 夜の進行 ---------- */
+function startNight(){
+  D=DIFF[G.diff]; E=ECON[G.econ];
+  N={queue:buildNight(),seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,perfect:0,results:[],notes:[],busy:null,sinceArrival:99,nextDelay:0,ending:false,timer:null,lastActive:null};
+  $('overlay').hidden=true;
+  $('recipes').hidden=!D.book;
+  $('busy').hidden=true;
+  $('toast').textContent='';
+  renderShelf(); renderSeats(); renderActive(); renderBar(); renderStats();
+  N.timer=setInterval(tick,100);
+}
+
+function activeCust(){return N&&N.active>=0?N.seats[N.active]:null}
+function canMix(){const c=activeCust();return !!c&&!c.done&&c.order.kind!=='wild'&&!N.busy}
+
+function seatNext(i){
+  const cust=N.queue.shift(), o=cust.order, ch=cust.char, m=G.mem[ch.id];
+  cust.seat=i; cust.done=false;
+  cust.patienceMax=PATIENCE[o.kind]*D.pat; cust.patience=cust.patienceMax;
+  cust.text=o.text;
+  if(o.kind==='named'&&D.tell==='once'&&!G.learned[o.cocktail.name]){
+    cust.text=`${o.cocktail.name}、ひとつ。${o.cocktail.ings.map(x=>BY_ID[x].name).join('と')}で作ってね。`;
+    G.learned[o.cocktail.name]=true;
+  }
+  if(o.kind==='omakase'&&D.tell&&!m.prefKnown){cust.text=`おまかせで。${ch.pref}`;m.prefKnown=true}
+  N.seats[i]=cust; N.sinceArrival=0; N.nextDelay=3+Math.random()*4;
+  if(N.active<0||!N.seats[N.active]||N.seats[N.active].done) N.active=i;
+  renderSeats(); renderActive(); renderBar();
+}
+
+function selectSeat(i){
+  const c=N.seats[i]; if(!c||c.done||i===N.active) return;
+  N.active=i; renderSeats(); renderActive(); renderBar();
+}
+
+function tick(){
+  const dt=0.1;
+  N.sinceArrival+=dt;
+  const free=N.seats.findIndex(s=>!s);
+  if(N.queue.length&&free>=0&&N.sinceArrival>=N.nextDelay) seatNext(free);
+  N.seats.forEach(c=>{
+    if(!c||c.done) return;
+    if(N.busy&&N.busy.cust===c) return;
+    c.patience-=dt;
+    if(c.patience<=0) leaveCust(c);
+  });
+  if(N.busy){
+    N.busy.remaining-=dt; renderBusy();
+    if(N.busy.remaining<=0){const b=N.busy;N.busy=null;$('busy').hidden=true;finishCust(b.cust,b.out);}
+  }
+  renderPatience();
+  if(!N.queue.length&&N.seats.every(s=>!s)&&!N.busy&&!N.ending){N.ending=true;clearInterval(N.timer);setTimeout(endNight,600)}
+}
+
+/* ---------- 操作 ---------- */
+function addIng(ing){
+  if(!canMix()) return;
+  if(G.stock[ing.id]<=0){toast(`${ing.name}を切らしてる！`);return}
+  if(N.glass.find(g=>g.id===ing.id)){toast(`${ing.name}はもう入ってるよ`);return}
+  if(N.glass.length>=MAX){toast('グラスがいっぱい！');shakeGlass();return}
+  N.glass.push(ing); renderGlass();
+}
+function removeIng(i){if(!canMix())return;N.glass.splice(i,1);renderGlass()}
+
+function serve(){
+  const cust=activeCust(); if(!canMix()) return;
+  if(!N.glass.length){toast('グラスが空だよ！');shakeGlass();return}
+  const res=evaluate(cust);
+  N.glass.forEach(i=>{G.stock[i.id]=Math.max(0,G.stock[i.id]-1)});
+  const ids=N.glass.map(i=>i.id);
+  N.glass=[];
+  finishCust(cust,res,ids);
+}
+
+function requiredIds(o){return o.kind==='named'?o.cocktail.ings:(o.kind==='repeat'||o.kind==='usual'||o.kind==='variant')?o.glass:[]}
+function substitute(){
+  const cust=activeCust(); if(!cust||cust.done||N.busy) return;
+  const ch=cust.char, m=G.mem[ch.id];
+  cust.order={kind:'substitute',text:'そっか。じゃあ、何か合うのを見繕って。',label:'代わりの一杯',summary:'代わりの一杯',pay:350};
+  cust.text=cust.order.text;
+  if(D.tell&&!m.prefKnown){cust.text+=' '+ch.pref;m.prefKnown=true}
+  renderSeats(); renderActive(); renderBar();
+}
+
+function choose(i){
+  const cust=activeCust(); if(!cust||cust.done||cust.order.kind!=='wild'||N.busy) return;
+  const c=cust.order.def.choices[i];
+  let out=c;
+  if(c.guess&&cust.char.name===c.guess) out={tip:500,line:'…え、なんで知ってるの！？'};
+  else if(c.outcomes){const r=Math.random();let acc=0;out=c.outcomes[c.outcomes.length-1];for(const o of c.outcomes){acc+=o.p;if(r<acc){out=o;break}}}
+  const grade=out.tip>=250?'perfect':out.tip>0?'partial':'fail';
+  const t=c.t||(0.5+Math.max(0,c.tip!=null?c.tip:250)/100);
+  N.busy={cust,remaining:t,total:t,label:c.busy||c.label+'…',out:{grade,money:Math.round(out.tip*0.6),line:out.line}};
+  $('busyLabel').textContent=N.busy.label; $('busyBar').style.width='0%'; $('busy').hidden=false;
+  renderBar();
+}
+function renderBusy(){if(!N.busy)return;$('busyBar').style.width=(100*(1-N.busy.remaining/N.busy.total))+'%'}
+
+/* ---------- 判定 ---------- */
+function prefHint(ch,p){
+  for(const t of ch.hates) if((p[t]||0)>0) return `${TAGWORD[t]}のは苦手なんだ`;
+  for(const t of ch.likes) if((p[t]||0)<2) return `もっと${TAGWORD[t]}のがいい`;
+  return '';
+}
+function evaluate(cust){
+  const o=cust.order, ch=cust.char, glass=N.glass, L=ch.lines;
+  const speed=Math.max(0,cust.patience/cust.patienceMax);
+  const affMult=1+0.08*(G.mem[ch.id].aff||0);
+  const pay=g=>g==='perfect'?Math.round((o.pay+150*speed)*affMult):g==='partial'?Math.round(o.pay*0.4):0;
+  const got=glass.map(i=>i.id);
+  const jac=target=>{const missing=target.filter(x=>!got.includes(x)),extra=got.filter(x=>!target.includes(x));return {j:(target.length-missing.length)/(target.length+extra.length),missing,extra}};
+  const hintOf=r=>r.missing.length?`${BY_ID[r.missing[0]].name}が足りない気がする`:r.extra.length?`${BY_ID[r.extra[0]].name}は余計かも`:'';
+  let grade,line;
+  if(o.kind==='named'||o.kind==='repeat'||o.kind==='usual'){
+    const r=jac(o.kind==='named'?o.cocktail.ings:o.glass);
+    grade=r.j===1?'perfect':r.j>=0.5?'partial':'fail';
+    if(grade==='perfect') line=o.kind==='usual'?`${L.ok} さすが、覚えてるね`:L.ok;
+    else line=`${grade==='partial'?L.meh:L.ng}（${o.kind==='named'?hintOf(r):'前のと違う…'}）`;
+  }else if(o.kind==='variant'){
+    const r=jac(o.glass), pl=profile(o.glass.map(id=>BY_ID[id])), pn=profile(glass);
+    const same=r.j>=0.5, more=(pn[o.tag]||0)>(pl[o.tag]||0);
+    grade=same&&more?'perfect':(same||more)?'partial':'fail';
+    line=grade==='perfect'?L.ok:!same?`${L.ng}（前のと全然違う）`:`${L.meh}（もっと${TAGWORD[o.tag]}のを頼んだのに）`;
+  }else if(o.kind==='abstract'){
+    const d=o.def, p=profile(glass), conds=[];
+    for(const k in (d.want||{})) conds.push((p[k]||0)>=d.want[k]);
+    for(const k in (d.max||{})) conds.push((p[k]||0)<=d.max[k]);
+    if(d.any) conds.push(Object.keys(d.any).some(k=>(p[k]||0)>=d.any[k]));
+    const score=conds.length?conds.filter(Boolean).length/conds.length:1;
+    grade=score===1?'perfect':score>=0.5?'partial':'fail';
+    line=grade==='perfect'?d.ok:d.ng;
+    if(glass.length<2&&!d.soloOk&&grade==='perfect'){grade='partial';line=`…それ、${glass[0].name}そのままでは？`}
+    if(grade==='perfect'&&(p.strong||0)>=7&&!(d.want&&d.want.strong>=5)){grade='partial';line='…強すぎる。何杯分入れたの？'}
+  }else{ // omakase / substitute
+    const p=profile(glass), conds=[];
+    ch.likes.forEach(t=>conds.push((p[t]||0)>=2));
+    ch.hates.forEach(t=>conds.push((p[t]||0)===0));
+    const score=conds.filter(Boolean).length/conds.length;
+    grade=score===1?'perfect':score>=0.5?'partial':'fail';
+    if(glass.length<2&&grade==='perfect') grade='partial';
+    if(grade==='perfect'&&(p.strong||0)>=7&&!ch.likes.includes('strong')){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    const c=matchCocktail(glass);
+    if(!line) line=grade==='perfect'?(c?`お、${c.name}か。${L.ok}`:L.ok):`${grade==='partial'?L.meh:L.ng}（${prefHint(ch,p)||'なんか違う'}）`;
+  }
+  return {grade,money:pay(grade),line};
+}
+
+/* ---------- 客の退場・記憶 ---------- */
+function remember(cust,grade,ids){
+  const m=G.mem[cust.char.id], nm=cust.char.name; m.visits++;
+  if(grade==='perfect'){const b=m.aff;m.aff=Math.min(5,m.aff+1);if(b<2&&m.aff>=2)N.notes.push(`${nm}が常連になった ★★`);else if(b<5&&m.aff===5)N.notes.push(`${nm}は店の顔になった ★★★★★`)}
+  else if(grade==='fail'||grade==='left'){m.aff=Math.max(0,m.aff-1);m.skip=true;N.notes.push(grade==='left'?`${nm}は待ちきれずに帰った。明日は来ない…`:`${nm}はご機嫌ななめ。明日は来ない…`)}
+  if(ids&&grade!=='fail') m.last=ids;
+}
+function finishCust(cust,res,ids){
+  cust.done=true; cust.res=res;
+  N.sales+=res.money; G.money+=res.money;
+  if(res.grade==='perfect') N.perfect++;
+  N.results.push({char:cust.char,grade:res.grade});
+  remember(cust,res.grade,ids);
+  renderSeats(); renderStats(); renderShelf();
+  if(N.active===cust.seat){renderActive();renderBar()}
+  setTimeout(()=>{
+    if(N.seats[cust.seat]===cust) N.seats[cust.seat]=null;
+    if(N.active===cust.seat) N.active=N.seats.findIndex(s=>s&&!s.done);
+    renderSeats(); renderActive(); renderBar();
+  },1800);
+}
+function leaveCust(cust){finishCust(cust,{grade:'left',money:0,line:'…もういいや。（帰ってしまった）'})}
+
+/* ---------- 描画 ---------- */
+function renderStats(){$('night').textContent=G.night;$('sales').textContent=yen(N.sales);$('money').textContent=yen(G.money)}
+
+function renderSeats(){
+  const el=$('seats'); el.style.gridTemplateColumns=`repeat(${D.seats},1fr)`;
+  el.innerHTML=N.seats.map((c,i)=>{
+    if(!c) return `<div class="seat empty">空席</div>`;
+    const aff=G.mem[c.char.id].aff;
+    const badge=c.done?`<span class="badge">${BADGE[c.res.grade]}</span>`:'';
+    return `<div class="seat ${i===N.active?'active':''} ${c.done?'done':''}" data-i="${i}"><div class="seat-art">${c.char.svg}${badge}</div><div class="seat-info"><b>${c.char.name}${aff?' <em>'+'★'.repeat(aff)+'</em>':''}</b><span class="so">${esc(c.order.summary)}</span><div class="pat"><div style="width:${100*c.patience/c.patienceMax}%"></div></div></div></div>`;
+  }).join('');
+}
+function renderPatience(){
+  N.seats.forEach((c,i)=>{
+    if(!c) return; const bar=$('seats').querySelector(`.seat[data-i="${i}"] .pat>div`); if(!bar) return;
+    const r=Math.max(0,c.patience/c.patienceMax);
+    bar.style.width=(r*100)+'%'; bar.style.background=r>0.5?'var(--good)':r>0.25?'var(--accent)':'var(--bad)';
+  });
+}
+
+function renderActive(){
+  const cust=activeCust(), b=$('bubble');
+  if(!cust){
+    $('avatarArt').innerHTML='';$('cname').textContent='';$('ctitle').textContent='';$('caff').textContent='';$('face').textContent='';
+    b.innerHTML=`<div class="muted">${N.queue.length?'次のお客さんを待っています…':'今夜はこれで最後…'}</div>`; N.lastActive=null; return;
+  }
+  const ch=cust.char, m=G.mem[ch.id];
+  if(N.lastActive!==cust){$('avatarArt').innerHTML=ch.svg;const av=$('avatar');av.classList.remove('enter');void av.offsetWidth;av.classList.add('enter');N.lastActive=cust}
+  $('cname').textContent=ch.name;$('ctitle').textContent=ch.title;$('caff').textContent=m.aff?'★'.repeat(m.aff):'';
+  if(cust.done){
+    const r=cust.res; $('face').textContent=r.grade==='left'?'💢':BADGE[r.grade];
+    const tag=r.money>0?`<b style="color:#2e8b57">+${yen(r.money)}</b>`:r.money<0?`<b style="color:#c0392b">-${yen(Math.abs(r.money))}</b>`:'<b style="color:#888">¥0</b>';
+    b.innerHTML=`<div>${esc(r.line)}</div><div class="pay">${tag}</div>`;
+  }else{
+    $('face').textContent='';
+    b.innerHTML=`<span class="type">${cust.order.label}</span><div>${esc(cust.text)}</div>`;
+  }
+  b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');
+}
+
+function renderBar(){
+  const cust=activeCust();
+  const wild=!!cust&&!cust.done&&cust.order.kind==='wild';
+  $('bar').hidden=wild; $('shelf').hidden=wild; $('choices').hidden=!wild||!!N.busy;
+  if(wild&&!N.busy){
+    const el=$('choices'); el.innerHTML='';
+    cust.order.def.choices.forEach((c,i)=>{
+      const t=c.t||(0.5+Math.max(0,c.tip!=null?c.tip:250)/100);
+      const btn=document.createElement('button'); btn.innerHTML=`<span>${esc(c.label)}</span><small>${t.toFixed(1)}秒</small>`; btn.onclick=()=>choose(i); el.appendChild(btn);
+    });
+  }
+  const sub=$('subst'); sub.hidden=true;
+  if(cust&&!cust.done&&!N.busy){
+    const out=requiredIds(cust.order).find(id=>G.stock[id]<=0);
+    if(out){sub.hidden=false;sub.textContent=`「${BY_ID[out].name}を切らしてまして…」と伝えて、代わりを提案する`}
+  }
+  renderGlass();
+}
+
+function renderGlass(){
+  const g=$('glass'); g.innerHTML='';
+  N.glass.forEach(ing=>{const d=document.createElement('div');d.className='layer';d.style.background=ing.color;g.appendChild(d)});
+  const gi=$('glassItems'); gi.innerHTML='';
+  if(!N.glass.length) gi.innerHTML='<span class="empty">素材をタップしてグラスに入れる（最大4つ）</span>';
+  N.glass.forEach((ing,i)=>{const c=document.createElement('button');c.className='chip';c.innerHTML=`<i style="background:${ing.color}"></i>${ing.name} ×`;c.onclick=()=>removeIng(i);gi.appendChild(c)});
+  document.querySelectorAll('#shelf button').forEach(b=>b.classList.toggle('in',!!N.glass.find(x=>x.id===b.dataset.id)));
+  const ok=canMix(); $('serve').disabled=!ok; $('clear').disabled=!ok;
+}
+
+function renderShelf(){
+  const s=$('shelf'); s.innerHTML='';
+  ING.forEach(ing=>{
+    const st=G?G.stock[ing.id]:ing.cap;
+    const b=document.createElement('button'); b.dataset.id=ing.id; if(st<=0)b.classList.add('out');
+    b.innerHTML=`${bottleHtml(ing)}<span class="name">${ing.name}</span><span class="tags">${Object.keys(ing.tags).map(t=>`<span>${TAGL[t]}</span>`).join('')}</span><span class="cnt ${st<=0?'zero':''}">${st<=0?'切れ':'残り '+st}</span>`;
+    b.onclick=()=>addIng(ing); s.appendChild(b);
+  });
+  if(N) renderGlass();
+}
+
+function renderRecipes(){
+  $('recipeList').innerHTML=COCKTAILS.map(c=>`<div><b>${c.name}</b>${c.na?' <small>(ノンアル)</small>':''}<br>${c.ings.map(i=>BY_ID[i].name).join(' + ')}</div>`).join('');
+}
+
+let toastT;
+function toast(msg){$('toast').textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>$('toast').textContent='',1500)}
+function shakeGlass(){const g=$('glass');g.classList.remove('shake');void g.offsetWidth;g.classList.add('shake')}
+
+/* ---------- 閉店・仕入れ ---------- */
+function endNight(){
+  const rent=rentNow();
+  G.money-=rent;
+  G.history.push({night:G.night,sales:N.sales,rent,perfect:N.perfect,customers:N.results.length});
+  if(G.money<0){clearSave();renderGameOver();return}
+  save(); renderClosing();
+}
+function renderGameOver(){
+  const total=G.history.reduce((s,h)=>s+h.sales,0);
+  $('card').innerHTML=`<p>夜${G.night} 閉店</p><div class="big">${yen(N.sales)}</div><p>家賃 ${yen(rentNow())} を払うと… <b style="color:var(--bad)">${yen(G.money)}</b></p><hr><div class="rank" style="font-size:30px">家賃が払えなかった…</div><p>店は${G.night}日で閉店。総売上 ${yen(total)}。</p><p class="notes">仕入れは売れる分だけ、失敗は赤字。<br>常連を作ると単価が上がります。</p><button id="again">最初から</button>`;
+  $('overlay').hidden=false;
+  $('again').onclick=showTitle;
+}
+function renderClosing(){
+  const lineup=N.results.map(r=>`<div class="mini" title="${r.char.name}">${r.char.svg}<span>${BADGE[r.grade]}</span></div>`).join('');
+  const notes=N.notes.length?`<div class="notes">${N.notes.map(esc).join('<br>')}</div>`:'';
+  const last=G.night>=NIGHTS;
+  const rent=rentNow(), profit=N.sales-rent;
+  const profitTag=`<b style="color:${profit>=0?'var(--good)':'var(--bad)'}">${profit<0?'-':''}${yen(Math.abs(profit))}</b>`;
+  $('card').innerHTML=`<p>夜${G.night} 閉店</p><div class="big">${yen(N.sales)}</div><p>${rent?`家賃 ${yen(rent)} を引いて、今夜の儲けは ${profitTag}`:`今夜の儲けは ${profitTag}（家賃なし）`}<br>パーフェクト ${N.perfect}回 / ${N.results.length}人</p><div class="lineup">${lineup}</div>${notes}
+  ${last?'':`<hr><h3>仕入れ</h3><p>所持金 <b id="rmoney" style="color:var(--accent)">${yen(G.money)}</b></p><div class="restock" id="restock"></div><button id="fillAll" class="ghost"></button>`}
+  <br><button id="nextNight">${last?'一週間の結果を見る':'次の夜へ'}</button>`;
+  $('overlay').hidden=false;
+  if(!last){
+    renderRestock();
+    $('restock').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.buy)buy(b.dataset.buy,1);if(b.dataset.fill)buy(b.dataset.fill,99)};
+    $('fillAll').onclick=()=>{ING.forEach(i=>buy(i.id,99))};
+  }
+  $('nextNight').onclick=nextNight;
+}
+function buy(id,n){const ing=BY_ID[id],pr=priceOf(ing);while(n-->0&&G.stock[id]<ing.cap&&G.money>=pr){G.stock[id]++;G.money-=pr}renderRestock()}
+function renderRestock(){
+  $('rmoney').textContent=yen(G.money);
+  $('restock').innerHTML=ING.map(i=>{const st=G.stock[i.id],full=st>=i.cap,pr=priceOf(i),can=G.money>=pr;
+    return `<div class="rrow">${bottleHtml(i)}<span>${i.name}</span><span class="rs ${st<=0?'zero':''}">${st}/${i.cap}</span><span class="rp">¥${pr}</span><button data-buy="${i.id}" ${full||!can?'disabled':''}>+1</button><button data-fill="${i.id}" ${full||!can?'disabled':''}>満タン</button></div>`}).join('');
+  const total=ING.reduce((s,i)=>s+(i.cap-G.stock[i.id])*priceOf(i),0);
+  const cheapest=Math.min(...ING.filter(i=>G.stock[i.id]<i.cap).map(priceOf));
+  const fb=$('fillAll'); fb.textContent=total?`買えるだけ満タンにする（全部で${yen(total)}）`:'すべて満タン'; fb.disabled=!total||G.money<cheapest;
+}
+function nextNight(){
+  if(G.night>=NIGHTS){renderFinal();return}
+  G.night++; save(); startNight();
+}
+function renderFinal(){
+  const total=G.history.reduce((s,h)=>s+h.sales,0);
+  const best=G.history.reduce((a,b)=>b.sales>a.sales?b:a,G.history[0]);
+  const regulars=CHARS.filter(c=>G.mem[c.id].aff>=3);
+  const kept=G.money;
+  const [tS,tA,tB]=[12000,7000,2000].map(x=>Math.round(x*E.rank));
+  const rank=kept>=tS?'S':kept>=tA?'A':kept>=tB?'B':'C';
+  const cm={S:'伝説のバーテンダー',A:'この街で一番の店',B:'まずまずの一週間',C:'来週こそ'}[rank];
+  const reg=regulars.length?`<p>常連になった客</p><div class="lineup">${regulars.map(c=>`<div class="mini">${c.svg}<span class="st">${'★'.repeat(G.mem[c.id].aff)}</span></div>`).join('')}</div>`:'<p>常連はできなかった…</p>';
+  $('card').innerHTML=`<p>一週間おつかれさま</p><div class="rank">${rank}</div><p><b style="color:var(--text)">${cm}</b></p><div class="big">${yen(kept)}</div><p>一週間で手元に残ったお金<br>総売上 ${yen(total)} / 一番稼いだ夜: 夜${best.night}（${yen(best.sales)}）</p>${reg}<button id="again">最初から</button>`;
+  $('again').onclick=()=>{clearSave();showTitle()};
+}
+
+/* ---------- タイトル ---------- */
+let selDiff='pro', selEcon='normal';
+function showTitle(){
+  const s=load();
+  const cast=CHARS.map(c=>`<div class="mini" title="${c.name}">${c.svg}</div>`).join('');
+  const opts=(obj,attr,sel)=>Object.entries(obj).map(([k,d])=>`<button class="diff ${k===sel?'sel':''}" data-${attr}="${k}"><b>${d.name}</b><small>${d.desc}</small></button>`).join('');
+  $('card').innerHTML=`<h1>🍸 Bar Shaker</h1><p>一週間、バーのカウンターに立つ。<br>常連を増やし、仕入れをやりくりし、無茶ぶりをさばこう。</p><div class="cast">${cast}</div>
+  ${s?`<button id="cont">続きから（夜${s.night}・${DIFF[s.diff].name}・${ECON[s.econ].name}・${yen(s.money)}）</button><hr>`:''}
+  <p class="sec">腕前</p><div class="diffs" id="diffRow">${opts(DIFF,'d',selDiff)}</div>
+  <p class="sec">お金</p><div class="diffs" id="econRow">${opts(ECON,'e',selEcon)}</div>
+  <button id="go">開店する</button>`;
+  $('overlay').hidden=false;
+  if(s) $('cont').onclick=()=>continueGame(s);
+  const pick=(row,attr,setter)=>row.querySelectorAll('.diff').forEach(b=>b.onclick=()=>{setter(b.dataset[attr]);row.querySelectorAll('.diff').forEach(x=>x.classList.toggle('sel',x===b))});
+  pick($('diffRow'),'d',v=>selDiff=v); pick($('econRow'),'e',v=>selEcon=v);
+  $('go').onclick=()=>newGame(selDiff,selEcon);
+}
+
+$('serve').onclick=serve;
+$('clear').onclick=()=>{if(!canMix())return;N.glass=[];renderGlass()};
+$('subst').onclick=substitute;
+$('seats').onclick=e=>{const s=e.target.closest('.seat[data-i]');if(s)selectSeat(+s.dataset.i)};
+
+renderRecipes(); renderShelf(); showTitle();
+</script>
+</body>
+</html>
