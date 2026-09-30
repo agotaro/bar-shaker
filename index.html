@@ -18,6 +18,17 @@ header{display:flex;justify-content:space-between;align-items:center;padding:4px
 header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
 .stats{display:flex;gap:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
 .stats b{color:var(--accent);font-size:16px}
+.title .nightTag{font-size:12px;color:var(--muted);font-weight:600;margin-left:6px}
+.title .nightTag b{color:var(--accent)}
+.clockrow{display:flex;align-items:center;gap:10px;margin:-2px 0 10px}
+.clockrow b{font-size:18px;font-variant-numeric:tabular-nums;min-width:50px}
+.daybar{flex:1;height:8px;background:var(--panel2);border-radius:99px;position:relative;overflow:hidden}
+.daybar>div{height:100%;width:0;background:linear-gradient(90deg,#f3b95f,#8fd3ff);border-radius:99px}
+.daybar>i{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);opacity:.8}
+.clockrow small{color:var(--muted);font-size:12px;min-width:84px;text-align:right}
+.pts{color:var(--info)}
+.combo{color:var(--bad);font-weight:700}
+.hi{color:var(--accent);font-weight:700}
 
 .seats{display:grid;gap:8px;margin-bottom:10px}
 .seat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;cursor:pointer;min-height:64px;position:relative;transition:border-color .15s}
@@ -142,9 +153,10 @@ details.recipes summary{cursor:pointer;color:var(--text);font-weight:600}
 <body>
 <div id="app">
   <header>
-    <div class="title">🍸 Bar Shaker</div>
-    <div class="stats"><span>夜 <b id="night">1</b>/7</span><span>今夜 <b id="sales">¥0</b></span><span>所持金 <b id="money">¥0</b></span></div>
+    <div class="title">🍸 Bar Shaker <span class="nightTag">夜 <b id="night">1</b>/7</span></div>
+    <div class="stats"><span>スコア <b id="score">0</b></span><span>今夜 <b id="sales">¥0</b></span><span>所持金 <b id="money">¥0</b></span></div>
   </header>
+  <div class="clockrow"><b id="clock">19:00</b><div class="daybar"><div id="dayFill"></div><i id="loMark"></i></div><small id="clockNote">開店</small></div>
 
   <section class="seats" id="seats"></section>
 
@@ -186,7 +198,7 @@ details.recipes summary{cursor:pointer;color:var(--text);font-weight:600}
 <script>
 /* ---------- キャラクター ---------- */
 const CHARS=[
-{id:'tanaka',likes:['fresh'],hates:['sweet'],pref:'さっぱりしたのが好きで、甘いのは苦手です。',name:'田中',title:'疲れた会社員',lines:{ok:'…はぁ、うまい。生き返る',meh:'まあ、いいです…疲れてるんで',ng:'違う…けど、もういいです…'},svg:`
+{id:'tanaka',hours:[20,24],likes:['fresh'],hates:['sweet'],pref:'さっぱりしたのが好きで、甘いのは苦手です。',name:'田中',title:'疲れた会社員',lines:{ok:'…はぁ、うまい。生き返る',meh:'まあ、いいです…疲れてるんで',ng:'違う…けど、もういいです…'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-tanaka"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#3d4a6b"/><g clip-path="url(#cp-tanaka)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#232b45"/>
@@ -204,7 +216,7 @@ const CHARS=[
 <path d="M36 46 Q40 44.5 44 46" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
 </g></svg>`},
 
-{id:'rina',likes:['sweet','fruity'],hates:['bitter'],pref:'甘くてフルーティなやつ！苦いのはムリ。',name:'リナ',title:'パリピ',lines:{ok:'ヤバい！映える！',meh:'んー、ビミョー？',ng:'え、なにこれ。ウケないんだけど'},svg:`
+{id:'rina',hours:[22,26],likes:['sweet','fruity'],hates:['bitter'],pref:'甘くてフルーティなやつ！苦いのはムリ。',name:'リナ',title:'パリピ',lines:{ok:'ヤバい！映える！',meh:'んー、ビミョー？',ng:'え、なにこれ。ウケないんだけど'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-rina"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#ff8fb1"/><g clip-path="url(#cp-rina)">
 <path d="M10 34 Q8 8 40 8 Q72 8 70 34 L72 86 L8 86Z" fill="#ffc857"/>
@@ -223,7 +235,7 @@ const CHARS=[
 <circle cx="59" cy="43" r="3" fill="none" stroke="#f5b400" stroke-width="1.6"/>
 </g></svg>`},
 
-{id:'gen',likes:['strong','bitter'],hates:['sweet'],pref:'強くて苦いのがいい。甘いのは要らん。',name:'源さん',title:'常連の老人',lines:{ok:'ふむ。腕を上げたな',meh:'昔のマスターは一発だったがね',ng:'…はぁ。ワシの若い頃はな'},svg:`
+{id:'gen',hours:[19,22],likes:['strong','bitter'],hates:['sweet'],pref:'強くて苦いのがいい。甘いのは要らん。',name:'源さん',title:'常連の老人',lines:{ok:'ふむ。腕を上げたな',meh:'昔のマスターは一発だったがね',ng:'…はぁ。ワシの若い頃はな'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-gen"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#8b6f47"/><g clip-path="url(#cp-gen)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5b3f1f"/>
@@ -241,7 +253,7 @@ const CHARS=[
 <path d="M19 30 Q40 24 61 30 L63 33 Q40 27 17 33Z" fill="#3a2917"/>
 </g></svg>`},
 
-{id:'holmes',likes:['bitter'],hates:['fruity'],pref:'苦味のあるものを。果物は好まない。',name:'ホームズ',title:'探偵',lines:{ok:'…完璧だ。証拠は要らない',meh:'惜しいな。何かが足りない',ng:'犯人は、お前だ'},svg:`
+{id:'holmes',hours:[21,25],likes:['bitter'],hates:['fruity'],pref:'苦味のあるものを。果物は好まない。',name:'ホームズ',title:'探偵',lines:{ok:'…完璧だ。証拠は要らない',meh:'惜しいな。何かが足りない',ng:'犯人は、お前だ'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-holmes"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#2f3e46"/><g clip-path="url(#cp-holmes)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#a0793d"/>
@@ -257,7 +269,7 @@ const CHARS=[
 <ellipse cx="40" cy="26" rx="26" ry="4" fill="#3b2f2f"/>
 </g></svg>`},
 
-{id:'mei',likes:['sweet'],hates:['strong'],pref:'甘いのが好きです。強いお酒はちょっと…',name:'メイ',title:'大学生',lines:{ok:'わー！おいしい！',meh:'あ、うん、ありがとうございます…',ng:'…泣きそう'},svg:`
+{id:'mei',hours:[19,23],likes:['sweet'],hates:['strong'],pref:'甘いのが好きです。強いお酒はちょっと…',name:'メイ',title:'大学生',lines:{ok:'わー！おいしい！',meh:'あ、うん、ありがとうございます…',ng:'…泣きそう'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-mei"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#f4a261"/><g clip-path="url(#cp-mei)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#4f8a5b"/>
@@ -276,7 +288,7 @@ const CHARS=[
 <path d="M36 45 Q40 48 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
 </g></svg>`},
 
-{id:'robo',likes:['sour','fresh'],hates:['sweet'],pref:'酸味ト爽快感ヲ要求。糖分ハ不要。',name:'RB-7',title:'試飲ロボット',lines:{ok:'評価：最適解。',meh:'評価：許容範囲内。',ng:'エラー。注文ト一致シマセン。'},svg:`
+{id:'robo',hours:[19,26],likes:['sour','fresh'],hates:['sweet'],pref:'酸味ト爽快感ヲ要求。糖分ハ不要。',name:'RB-7',title:'試飲ロボット',lines:{ok:'評価：最適解。',meh:'評価：許容範囲内。',ng:'エラー。注文ト一致シマセン。'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-robo"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#4e6e8e"/><g clip-path="url(#cp-robo)">
 <rect x="14" y="56" width="52" height="40" rx="8" fill="#9fb3c8"/>
@@ -292,7 +304,7 @@ const CHARS=[
 <circle cx="18" cy="32" r="3" fill="#7f95ad"/><circle cx="62" cy="32" r="3" fill="#7f95ad"/>
 </g></svg>`},
 
-{id:'nyanta',likes:['fruity'],hates:['strong'],pref:'ニャ（果物が好き。お酒は弱い）',name:'ニャン太',title:'看板猫（客側）',lines:{ok:'ニャ〜〜！',meh:'ニャ…',ng:'フシャーッ！'},svg:`
+{id:'nyanta',hours:[23,26],likes:['fruity'],hates:['strong'],pref:'ニャ（果物が好き。お酒は弱い）',name:'ニャン太',title:'看板猫（客側）',lines:{ok:'ニャ〜〜！',meh:'ニャ…',ng:'フシャーッ！'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-nyanta"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#f2c14e"/><g clip-path="url(#cp-nyanta)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f39c3d"/>
@@ -315,7 +327,7 @@ const CHARS=[
 <path d="M28 41 L18 39 M28 44 L18 46 M52 41 L62 39 M52 44 L62 46" stroke="#a0674f" stroke-width="1.2" stroke-linecap="round"/>
 </g></svg>`},
 
-{id:'vlad',likes:['strong'],hates:['fresh'],pref:'強いものを。爽やかなのは性に合わん。',name:'ヴラド',title:'吸血鬼（夜勤明け）',lines:{ok:'ふふ…血より旨い',meh:'悪くない。血には劣るが',ng:'貴様、闇に葬るぞ'},svg:`
+{id:'vlad',hours:[24,26],likes:['strong'],hates:['fresh'],pref:'強いものを。爽やかなのは性に合わん。',name:'ヴラド',title:'吸血鬼（夜勤明け）',lines:{ok:'ふふ…血より旨い',meh:'悪くない。血には劣るが',ng:'貴様、闇に葬るぞ'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-vlad"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#3a0f2e"/><g clip-path="url(#cp-vlad)">
 <path d="M14 62 L22 26 L40 48 L58 26 L66 62Z" fill="#1a0b16"/>
@@ -333,7 +345,7 @@ const CHARS=[
 <path d="M36 45 L37.5 49.5 L39 45.5Z M44 45 L42.5 49.5 L41 45.5Z" fill="#fff"/>
 </g></svg>`},
 
-{id:'mira',likes:['sweet','sour'],hates:['bitter'],pref:'甘酸っぱいのが好みよ。苦いのは呪うわ。',name:'ミラ',title:'魔女（自称）',lines:{ok:'これぞ魔法の一杯ね',meh:'呪文が一つ抜けてるわ',ng:'カエルにされたい？'},svg:`
+{id:'mira',hours:[22,26],likes:['sweet','sour'],hates:['bitter'],pref:'甘酸っぱいのが好みよ。苦いのは呪うわ。',name:'ミラ',title:'魔女（自称）',lines:{ok:'これぞ魔法の一杯ね',meh:'呪文が一つ抜けてるわ',ng:'カエルにされたい？'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-mira"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#5b3a8e"/><g clip-path="url(#cp-mira)">
 <path d="M12 34 Q10 8 40 8 Q70 8 68 34 L72 86 L8 86Z" fill="#2aa198"/>
@@ -353,7 +365,7 @@ const CHARS=[
 <path d="M63 11 l1.5 3 3 .4 -2.2 2.1 .6 3.1 -2.9 -1.5 -2.9 1.5 .6 -3.1 -2.2 -2.1 3 -.4z" fill="#f3b95f"/>
 </g></svg>`},
 
-{id:'pi',likes:['fruity','fresh'],hates:['bitter'],pref:'果物ト爽ヤカサ、求ム。苦味、拒否。',name:'ピー',title:'地球観光中',lines:{ok:'地球ノ飲ミ物、最高',meh:'母星ノほうガ美味シイ',ng:'侵略、決定'},svg:`
+{id:'pi',hours:[19,26],likes:['fruity','fresh'],hates:['bitter'],pref:'果物ト爽ヤカサ、求ム。苦味、拒否。',name:'ピー',title:'地球観光中',lines:{ok:'地球ノ飲ミ物、最高',meh:'母星ノほうガ美味シイ',ng:'侵略、決定'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-pi"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#0b3d3d"/><g clip-path="url(#cp-pi)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#8fa3b0"/>
@@ -485,9 +497,9 @@ const WILD=[
 /* ---------- 定数 ---------- */
 const NIGHTS=7, MAX=4;
 const DIFF={
-  novice:{name:'見習い',desc:'レシピ帳あり。客は同時に2人まで。',seats:2,book:true,tell:true,pat:1.2,extra:0,rent:600},
-  pro:{name:'一人前',desc:'レシピ帳なし。初めての注文だけ、客が作り方を教えてくれる。同時に3人。',seats:3,book:false,tell:'once',pat:1,extra:0,rent:800},
-  master:{name:'マスター',desc:'ヒントなし。客は多め、機嫌は短め。同時に3人。',seats:3,book:false,tell:false,pat:0.8,extra:2,rent:1000},
+  novice:{name:'見習い',desc:'レシピ帳あり。客は同時に2人まで。',seats:2,book:true,tell:true,pat:1.2,gap:1.2,rent:600},
+  pro:{name:'一人前',desc:'レシピ帳なし。初めての注文だけ、客が作り方を教えてくれる。同時に3人。',seats:3,book:false,tell:'once',pat:1,gap:1,rent:800},
+  master:{name:'マスター',desc:'ヒントなし。客が次々来て、機嫌は短め。同時に3人。',seats:3,book:false,tell:false,pat:0.8,gap:0.8,rent:1000},
 };
 const ECON={
   easy:{name:'のんびり',desc:'家賃なし。仕入れも安い。お金の心配をせず、客と遊ぶ。',rent:0,price:0.7,rank:1.6},
@@ -496,7 +508,8 @@ const ECON={
 };
 const PATIENCE={named:30,abstract:25,omakase:25,wild:20,repeat:30,usual:30,substitute:25};
 const BADGE={perfect:'😆',partial:'😐',fail:'😠',left:'💨'};
-const SAVE_KEY='barshaker.v2';
+const SAVE_KEY='barshaker.v2', HI_KEY='barshaker.hi';
+const OPEN=19, CLOSE=26, LAST=25.5, SEC_PER_HOUR=24;
 
 const $=id=>document.getElementById(id);
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
@@ -517,12 +530,15 @@ const rentNow=()=>Math.round(D.rent*E.rent);
 const priceOf=i=>Math.round(i.price*E.price/10)*10;
 
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
-function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;if(g&&!ECON[g.econ])g.econ='normal';return g&&DIFF[g.diff]?g:null}catch(e){return null}}
+function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;if(g&&!ECON[g.econ])g.econ='normal';if(g&&g.score===undefined)g.score=0;return g&&DIFF[g.diff]?g:null}catch(e){return null}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
+function loadHi(){try{return JSON.parse(localStorage.getItem(HI_KEY))||{}}catch(e){return {}}}
+function saveHi(h){try{localStorage.setItem(HI_KEY,JSON.stringify(h))}catch(e){}}
+function hiKey(){return G.diff+'-'+G.econ}
 function initMem(){CHARS.forEach(c=>{const m=G.mem[c.id]||(G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false});if(m.usual===undefined)m.usual=null})}
 
 function newGame(diff,econ){
-  G={diff,econ:econ||'normal',night:1,money:1000,stock:{},mem:{},learned:{},history:[]};
+  G={diff,econ:econ||'normal',night:1,money:1000,score:0,stock:{},mem:{},learned:{},history:[]};
   ING.forEach(i=>G.stock[i.id]=i.cap);
   initMem(); save(); startNight();
 }
@@ -561,40 +577,50 @@ function makeOrder(ch,m,ns){
   return {kind:'wild',def:w,text:w.text,label:'無茶ぶり',summary:'無茶ぶり'};
 }
 
-function buildNight(){
-  const count=Math.min(CHARS.length,7+G.night+D.extra);
-  let pool=CHARS.filter(c=>!G.mem[c.id].skip);
-  if(pool.length<3) pool=CHARS.slice();
-  CHARS.forEach(c=>{G.mem[c.id].skip=false});
-  pool=pool.map(c=>({c,w:G.mem[c.id].aff+Math.random()*3})).sort((a,b)=>b.w-a.w).map(x=>x.c);
-  const cast=pool.slice(0,count);
-  let wild=0; const ns={mem:0};
-  const queue=shuffle(cast).map(ch=>{
-    let o=makeOrder(ch,G.mem[ch.id],ns);
-    if(o.kind==='wild'){wild++;if(wild>3)o=namedOrder(ch)}
-    return {char:ch,order:o};
-  });
-  if(G.night===1){const i=queue.findIndex(q=>q.order.kind==='named');if(i>0)[queue[0],queue[i]]=[queue[i],queue[0]]}
-  return queue;
-}
 
 /* ---------- 夜の進行 ---------- */
+function pickArrival(){
+  const h=N.clock;
+  const all=CHARS.filter(c=>!N.absent.includes(c.id)&&(N.visits[c.id]||0)<2);
+  if(!all.length) return null;
+  const inWin=c=>h>=c.hours[0]&&h<c.hours[1];
+  const cands=all.filter(inWin).length?all.filter(inWin):all;
+  const ranked=cands.map(c=>({c,w:(1+G.mem[c.id].aff)*((N.visits[c.id]||0)?0.25:1)*(0.5+Math.random())})).sort((a,b)=>b.w-a.w);
+  const ch=ranked[0].c;
+  N.visits[ch.id]=(N.visits[ch.id]||0)+1;
+  let o;
+  if(G.night===1&&N.customers===0) o=namedOrder();
+  else{o=makeOrder(ch,G.mem[ch.id],N);if(o.kind==='wild'){N.wild++;if(N.wild>3)o=namedOrder(ch)}}
+  if(N.visits[ch.id]>1) o.revisit=true;
+  return {char:ch,order:o};
+}
+function arrivalGap(){const h=N.clock;const base=(h>=21&&h<24)?2.5+Math.random()*2:4+Math.random()*3;return base*D.gap}
+function fmtClock(h){const hh=Math.floor(h)%24,mm=Math.floor((h-Math.floor(h))*60);return `${hh}:${String(mm).padStart(2,'0')}`}
+function renderClock(){
+  $('clock').textContent=fmtClock(Math.min(N.clock,CLOSE+0.99));
+  $('dayFill').style.width=(Math.min(1,(N.clock-OPEN)/(CLOSE-OPEN))*100)+'%';
+  $('clockNote').textContent=N.clock>=CLOSE?'閉店時間':N.clock>=LAST?'ラストオーダー':N.clock>=24?'深夜':N.clock>=21?'ピークタイム':'開店';
+}
+
 function startNight(){
   D=DIFF[G.diff]; E=ECON[G.econ];
-  N={queue:buildNight(),seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,perfect:0,results:[],notes:[],busy:null,sinceArrival:99,nextDelay:0,ending:false,timer:null,lastActive:null};
+  const absent=CHARS.filter(c=>G.mem[c.id].skip).map(c=>c.id);
+  CHARS.forEach(c=>{G.mem[c.id].skip=false});
+  N={seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,score:0,combo:0,maxCombo:0,perfect:0,customers:0,visits:{},mem:0,wild:0,results:[],notes:[],busy:null,clock:OPEN,sinceArrival:99,nextDelay:0,exhausted:false,ending:false,timer:null,lastActive:null,absent};
   $('overlay').hidden=true;
   $('recipes').hidden=!D.book;
   $('busy').hidden=true;
   $('toast').textContent='';
-  renderShelf(); renderSeats(); renderActive(); renderBar(); renderStats();
+  $('loMark').style.left=((LAST-OPEN)/(CLOSE-OPEN)*100)+'%';
+  renderShelf(); renderSeats(); renderActive(); renderBar(); renderStats(); renderClock();
   N.timer=setInterval(tick,100);
 }
 
 function activeCust(){return N&&N.active>=0?N.seats[N.active]:null}
 function canMix(){const c=activeCust();return !!c&&!c.done&&c.order.kind!=='wild'&&!N.busy}
 
-function seatNext(i){
-  const cust=N.queue.shift(), o=cust.order, ch=cust.char, m=G.mem[ch.id];
+function seatNext(i,a){
+  const cust={char:a.char,order:a.order}, o=cust.order, ch=cust.char, m=G.mem[ch.id];
   cust.seat=i; cust.done=false;
   cust.patienceMax=PATIENCE[o.kind]*D.pat; cust.patience=cust.patienceMax;
   cust.text=o.text;
@@ -603,7 +629,9 @@ function seatNext(i){
     G.learned[o.cocktail.name]=true;
   }
   if(o.kind==='omakase'&&D.tell&&!m.prefKnown){cust.text=`おまかせで。${ch.pref}`;m.prefKnown=true}
-  N.seats[i]=cust; N.sinceArrival=0; N.nextDelay=3+Math.random()*4;
+  if(o.revisit) cust.text='また来ちゃった。'+cust.text;
+  N.customers++;
+  N.seats[i]=cust; N.sinceArrival=0; N.nextDelay=arrivalGap();
   if(N.active<0||!N.seats[N.active]||N.seats[N.active].done) N.active=i;
   renderSeats(); renderActive(); renderBar();
 }
@@ -615,9 +643,9 @@ function selectSeat(i){
 
 function tick(){
   const dt=0.1;
-  N.sinceArrival+=dt;
+  N.clock+=dt/SEC_PER_HOUR; N.sinceArrival+=dt;
   const free=N.seats.findIndex(s=>!s);
-  if(N.queue.length&&free>=0&&N.sinceArrival>=N.nextDelay) seatNext(free);
+  if(N.clock<LAST&&!N.exhausted&&free>=0&&N.sinceArrival>=N.nextDelay){const a=pickArrival();if(a)seatNext(free,a);else N.exhausted=true}
   N.seats.forEach(c=>{
     if(!c||c.done) return;
     if(N.busy&&N.busy.cust===c) return;
@@ -628,8 +656,9 @@ function tick(){
     N.busy.remaining-=dt; renderBusy();
     if(N.busy.remaining<=0){const b=N.busy;N.busy=null;$('busy').hidden=true;finishCust(b.cust,b.out);}
   }
-  renderPatience();
-  if(!N.queue.length&&N.seats.every(s=>!s)&&!N.busy&&!N.ending){N.ending=true;clearInterval(N.timer);setTimeout(endNight,600)}
+  renderPatience(); renderClock();
+  const empty=N.seats.every(s=>!s);
+  if(!N.ending&&!N.busy&&empty&&(N.clock>=LAST||N.exhausted)){N.ending=true;clearInterval(N.timer);setTimeout(endNight,600)}
 }
 
 /* ---------- 操作 ---------- */
@@ -748,7 +777,15 @@ function remember(cust,grade,ids){
 function finishCust(cust,res,ids){
   cust.done=true; cust.res=res;
   N.sales+=res.money; G.money+=res.money;
-  if(res.grade==='perfect') N.perfect++;
+  let pts=0;
+  if(res.grade==='perfect'){
+    N.perfect++; N.combo++; N.maxCombo=Math.max(N.maxCombo,N.combo);
+    const speed=Math.max(0,cust.patience/cust.patienceMax), k=cust.order.kind;
+    const base=100*(1+speed)+(k==='usual'||k==='repeat'?50:0)+(cust.order.mod?30:0)+10*(G.mem[cust.char.id].aff||0);
+    pts=Math.round(base*Math.min(2,1+0.1*(N.combo-1)));
+  }else if(res.grade==='partial'){pts=30;N.combo=0}
+  else N.combo=0;
+  res.pts=pts; res.combo=N.combo; N.score+=pts;
   N.results.push({char:cust.char,grade:res.grade});
   remember(cust,res.grade,ids);
   renderSeats(); renderStats(); renderShelf();
@@ -762,7 +799,7 @@ function finishCust(cust,res,ids){
 function leaveCust(cust){finishCust(cust,{grade:'left',money:0,line:'…もういいや。（帰ってしまった）'})}
 
 /* ---------- 描画 ---------- */
-function renderStats(){$('night').textContent=G.night;$('sales').textContent=yen(N.sales);$('money').textContent=yen(G.money)}
+function renderStats(){$('night').textContent=G.night;$('score').textContent=N.score.toLocaleString();$('sales').textContent=yen(N.sales);$('money').textContent=yen(G.money)}
 
 function renderSeats(){
   const el=$('seats'); el.style.gridTemplateColumns=`repeat(${D.seats},1fr)`;
@@ -785,7 +822,7 @@ function renderActive(){
   const cust=activeCust(), b=$('bubble');
   if(!cust){
     $('avatarArt').innerHTML='';$('cname').textContent='';$('ctitle').textContent='';$('caff').textContent='';$('face').textContent='';
-    b.innerHTML=`<div class="muted">${N.queue.length?'次のお客さんを待っています…':'今夜はこれで最後…'}</div>`; N.lastActive=null; return;
+    b.innerHTML=`<div class="muted">${(N.clock>=LAST||N.exhausted)?'今夜はこれで最後…':'次のお客さんを待っています…'}</div>`; N.lastActive=null; return;
   }
   const ch=cust.char, m=G.mem[ch.id];
   if(N.lastActive!==cust){$('avatarArt').innerHTML=ch.svg;const av=$('avatar');av.classList.remove('enter');void av.offsetWidth;av.classList.add('enter');N.lastActive=cust}
@@ -793,7 +830,8 @@ function renderActive(){
   if(cust.done){
     const r=cust.res; $('face').textContent=r.grade==='left'?'💢':BADGE[r.grade];
     const tag=r.money>0?`<b style="color:#2e8b57">+${yen(r.money)}</b>`:r.money<0?`<b style="color:#c0392b">-${yen(Math.abs(r.money))}</b>`:'<b style="color:#888">¥0</b>';
-    b.innerHTML=`<div>${esc(r.line)}</div><div class="pay">${tag}</div>`;
+    const pts=r.pts?` <b class="pts">+${r.pts}pt</b>${r.combo>=2?` <span class="combo">${r.combo}連続！</span>`:''}`:'';
+    b.innerHTML=`<div>${esc(r.line)}</div><div class="pay">${tag}${pts}</div>`;
   }else{
     $('face').textContent='';
     b.innerHTML=`<span class="type">${cust.order.label}</span><div>${esc(cust.text)}</div>`;
@@ -853,14 +891,15 @@ function shakeGlass(){const g=$('glass');g.classList.remove('shake');void g.offs
 /* ---------- 閉店・仕入れ ---------- */
 function endNight(){
   const rent=rentNow();
-  G.money-=rent;
-  G.history.push({night:G.night,sales:N.sales,rent,perfect:N.perfect,customers:N.results.length});
+  G.money-=rent; G.score=(G.score||0)+N.score;
+  G.history.push({night:G.night,sales:N.sales,rent,perfect:N.perfect,customers:N.results.length,score:N.score,maxCombo:N.maxCombo});
+  const hi=loadHi(),k=hiKey(); hi[k]=hi[k]||{night:0,week:0}; N.newHi=N.score>hi[k].night; if(N.newHi){hi[k].night=N.score;saveHi(hi)}
   if(G.money<0){clearSave();renderGameOver();return}
   save(); renderClosing();
 }
 function renderGameOver(){
   const total=G.history.reduce((s,h)=>s+h.sales,0);
-  $('card').innerHTML=`<p>夜${G.night} 閉店</p><div class="big">${yen(N.sales)}</div><p>家賃 ${yen(rentNow())} を払うと… <b style="color:var(--bad)">${yen(G.money)}</b></p><hr><div class="rank" style="font-size:30px">家賃が払えなかった…</div><p>店は${G.night}日で閉店。総売上 ${yen(total)}。</p><p class="notes">仕入れは売れる分だけ、失敗は赤字。<br>常連を作ると単価が上がります。</p><button id="again">最初から</button>`;
+  $('card').innerHTML=`<p>夜${G.night} 閉店</p><div class="big">${N.score.toLocaleString()} pt</div><p>売上 ${yen(N.sales)}。家賃 ${yen(rentNow())} を払うと… <b style="color:var(--bad)">${yen(G.money)}</b></p><hr><div class="rank" style="font-size:30px">家賃が払えなかった…</div><p>店は${G.night}日で閉店。総売上 ${yen(total)}。</p><p class="notes">仕入れは売れる分だけ、失敗は赤字。<br>常連を作ると単価が上がります。</p><button id="again">最初から</button>`;
   $('overlay').hidden=false;
   $('again').onclick=showTitle;
 }
@@ -870,7 +909,7 @@ function renderClosing(){
   const last=G.night>=NIGHTS;
   const rent=rentNow(), profit=N.sales-rent;
   const profitTag=`<b style="color:${profit>=0?'var(--good)':'var(--bad)'}">${profit<0?'-':''}${yen(Math.abs(profit))}</b>`;
-  $('card').innerHTML=`<p>夜${G.night} 閉店</p><div class="big">${yen(N.sales)}</div><p>${rent?`家賃 ${yen(rent)} を引いて、今夜の儲けは ${profitTag}`:`今夜の儲けは ${profitTag}（家賃なし）`}<br>パーフェクト ${N.perfect}回 / ${N.results.length}人</p><div class="lineup">${lineup}</div>${notes}
+  $('card').innerHTML=`<p>夜${G.night} 閉店</p><div class="big">${N.score.toLocaleString()} pt${N.newHi?' <span class="hi" style="font-size:14px">夜の新記録！</span>':''}</div><p>客 ${N.results.length}人 / パーフェクト ${N.perfect}回 / 最大 ${N.maxCombo}連続<br>売上 ${yen(N.sales)}。${rent?`家賃 ${yen(rent)} を引いて、今夜の儲けは ${profitTag}`:`今夜の儲けは ${profitTag}（家賃なし）`}</p><div class="lineup">${lineup}</div>${notes}
   ${last?'':`<hr><h3>仕入れ</h3><p>所持金 <b id="rmoney" style="color:var(--accent)">${yen(G.money)}</b></p><div class="restock" id="restock"></div><button id="fillAll" class="ghost"></button>`}
   <br><button id="nextNight">${last?'一週間の結果を見る':'次の夜へ'}</button>`;
   $('overlay').hidden=false;
@@ -895,15 +934,15 @@ function nextNight(){
   G.night++; save(); startNight();
 }
 function renderFinal(){
-  const total=G.history.reduce((s,h)=>s+h.sales,0);
-  const best=G.history.reduce((a,b)=>b.sales>a.sales?b:a,G.history[0]);
+  const total=G.history.reduce((s,h)=>s+h.sales,0), week=G.score||0;
+  const best=G.history.reduce((a,b)=>(b.score||0)>(a.score||0)?b:a,G.history[0]);
   const regulars=CHARS.filter(c=>G.mem[c.id].aff>=3);
-  const kept=G.money;
-  const [tS,tA,tB]=[12000,7000,2000].map(x=>Math.round(x*E.rank));
-  const rank=kept>=tS?'S':kept>=tA?'A':kept>=tB?'B':'C';
+  const hi=loadHi(),k=hiKey(); hi[k]=hi[k]||{night:0,week:0}; const newHi=week>hi[k].week; if(newHi){hi[k].week=week;saveHi(hi)}
+  const rank=week>=18000?'S':week>=12000?'A':week>=6000?'B':'C';
   const cm={S:'伝説のバーテンダー',A:'この街で一番の店',B:'まずまずの一週間',C:'来週こそ'}[rank];
   const reg=regulars.length?`<p>常連になった客</p><div class="lineup">${regulars.map(c=>`<div class="mini">${c.svg}<span class="st">${'★'.repeat(G.mem[c.id].aff)}</span></div>`).join('')}</div>`:'<p>常連はできなかった…</p>';
-  $('card').innerHTML=`<p>一週間おつかれさま</p><div class="rank">${rank}</div><p><b style="color:var(--text)">${cm}</b></p><div class="big">${yen(kept)}</div><p>一週間で手元に残ったお金<br>総売上 ${yen(total)} / 一番稼いだ夜: 夜${best.night}（${yen(best.sales)}）</p>${reg}<button id="again">最初から</button>`;
+  $('card').innerHTML=`<p>一週間おつかれさま</p><div class="rank">${rank}</div><p><b style="color:var(--text)">${cm}</b></p><div class="big">${week.toLocaleString()} pt${newHi?' <span class="hi" style="font-size:14px">週の新記録！</span>':''}</div><p>一番のびた夜: 夜${best.night}（${(best.score||0).toLocaleString()} pt）<br>総売上 ${yen(total)} / 手元に残ったお金 ${yen(G.money)}</p>${reg}<button id="again">最初から</button>`;
+  $('overlay').hidden=false;
   $('again').onclick=()=>{clearSave();showTitle()};
 }
 
@@ -917,11 +956,13 @@ function showTitle(){
   ${s?`<button id="cont">続きから（夜${s.night}・${DIFF[s.diff].name}・${ECON[s.econ].name}・${yen(s.money)}）</button><hr>`:''}
   <p class="sec">腕前</p><div class="diffs" id="diffRow">${opts(DIFF,'d',selDiff)}</div>
   <p class="sec">お金</p><div class="diffs" id="econRow">${opts(ECON,'e',selEcon)}</div>
+  <p id="hiLine"></p>
   <button id="go">開店する</button>`;
   $('overlay').hidden=false;
   if(s) $('cont').onclick=()=>continueGame(s);
   const pick=(row,attr,setter)=>row.querySelectorAll('.diff').forEach(b=>b.onclick=()=>{setter(b.dataset[attr]);row.querySelectorAll('.diff').forEach(x=>x.classList.toggle('sel',x===b))});
-  pick($('diffRow'),'d',v=>selDiff=v); pick($('econRow'),'e',v=>selEcon=v);
+  const hiLine=()=>{const h=loadHi()[selDiff+'-'+selEcon];$('hiLine').innerHTML=h?`ハイスコア <span class="hi">${h.week.toLocaleString()} pt</span> / 週　<span class="hi">${h.night.toLocaleString()} pt</span> / 夜`:'ハイスコア: まだなし'};
+  pick($('diffRow'),'d',v=>{selDiff=v;hiLine()}); pick($('econRow'),'e',v=>{selEcon=v;hiLine()}); hiLine();
   $('go').onclick=()=>newGame(selDiff,selEcon);
 }
 
