@@ -69,6 +69,7 @@ header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
 .bubble:before{content:"";position:absolute;left:-8px;top:18px;border:8px solid transparent;border-right-color:#fff8ee;border-left:0}
 .bubble .type{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#2a1c22;color:#fff;margin-bottom:6px;letter-spacing:.05em}
 .bubble .muted{color:#8a7a80}
+summary .muted{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
 .bubble .moodchip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:#ffe3a8;color:#4a3210;margin:0 0 6px 6px;font-weight:700}
 .bubble .pay{margin-top:6px;font-size:14px}
 .busy{margin-top:12px}
@@ -199,7 +200,7 @@ details.recipes summary{cursor:pointer;color:var(--text);font-weight:600}
   <section class="choices" id="choices" hidden></section>
 
   <details class="recipes" id="recipes">
-    <summary>📖 レシピ帳</summary>
+    <summary>📖 レシピ帳 <span id="recipeNote" class="muted"></span></summary>
     <div class="recipe-grid" id="recipeList"></div>
     <div class="legend">素材の特徴: 強=アルコール / 甘 / 酸 / 爽=さっぱり / 苦 / 果=フルーティ。ふわっとした注文は、この特徴の合計で判定されます。※レシピはお店独自の簡易版です。</div>
   </details>
@@ -805,8 +806,8 @@ const WILD=[
 const NIGHTS=7, MAX=4;
 const DIFF={
   novice:{name:'見習い',desc:'レシピ帳あり。客は同時に2人まで。',seats:2,book:true,tell:true,pat:1.2,gap:1.2,rent:600},
-  pro:{name:'一人前',desc:'レシピ帳なし。初めての注文だけ、客が作り方を教えてくれる。同時に3人。',seats:3,book:false,tell:'once',pat:1,gap:1,rent:800},
-  master:{name:'マスター',desc:'ヒントなし。客が次々来て、機嫌は短め。同時に3人。',seats:3,book:false,tell:false,pat:0.8,gap:0.8,rent:1000},
+  pro:{name:'一人前',desc:'レシピ帳は白紙から。客に教わったレシピと作れたレシピが書き足される。同時に3人。',seats:3,book:'learned',tell:'once',pat:1,gap:1,rent:800},
+  master:{name:'マスター',desc:'レシピ帳もヒントもなし。客が次々来て、機嫌は短め。同時に3人。',seats:3,book:false,tell:false,pat:0.8,gap:0.8,rent:1000},
 };
 const ECON={
   easy:{name:'のんびり',desc:'家賃なし。仕入れも安い。お金の心配をせず、客と遊ぶ。',rent:0,price:0.7,rank:1.6},
@@ -955,7 +956,7 @@ function makeOrder(ch,m,ns){
     const mk=(ch.mood&&keys.includes(ch.mood)&&Math.random()<0.6)?ch.mood:rnd(keys), md=MOODS[mk];
     return {kind:'mood',moodKey:mk,mood:md,text:mk==='rush'?'なんでもいい、早く！':'今日はなんか、こう…ね？',label:'今日の気分',summary:`${md.icon} ${md.name}`,pay:Math.round(450*(md.pay||1))};
   }
-  if(k==='like'){const c=rnd(COCKTAILS.filter(x=>x.ings.length>=2));return {kind:'like',cocktail:c,text:`${c.name}っぽいの、なんか作って。`,label:'アレンジ',summary:`${c.name}っぽい`,pay:500}}
+  if(k==='like'){const pool=COCKTAILS.filter(x=>x.ings.length>=2&&(D.book===true||G.learned[x.name]));if(!pool.length)return namedOrder(ch);const c=rnd(pool);return {kind:'like',cocktail:c,text:`${c.name}っぽいの、なんか作って。`,label:'アレンジ',summary:`${c.name}っぽい`,pay:500}}
   if(k==='same'){const ld=ns.lastDrink;return {kind:'same',glass:ld.ids,text:`さっき${ld.name}が飲んでたやつ、同じのを。`,label:'同じもの',summary:`${ld.name}と同じ`,pay:470}}
   if(k==='bulk'){
     const n=ch.bulkCount||3, c=rnd(COCKTAILS.filter(x=>x.ings.length<=3));
@@ -1015,7 +1016,7 @@ function startNight(){
   CHARS.forEach(c=>{G.mem[c.id].skip=false});
   N={seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,score:0,combo:0,maxCombo:0,perfect:0,customers:0,visits:{},mem:0,wild:0,lastDrink:null,results:[],notes:[],busy:null,clock:OPEN,sinceArrival:99,nextDelay:0,exhausted:false,ending:false,timer:null,lastActive:null,absent};
   $('overlay').hidden=true;
-  $('recipes').hidden=!D.book;
+  $('recipes').hidden=!D.book; renderRecipes();
   $('busy').hidden=true;
   $('toast').textContent='';
   $('loMark').style.left=((LAST-OPEN)/(CLOSE-OPEN)*100)+'%';
@@ -1033,7 +1034,7 @@ function seatNext(i,a){
   cust.text=o.text;
   if(o.kind==='named'&&D.tell==='once'&&!G.learned[o.cocktail.name]){
     cust.text=`${o.cocktail.name}、ひとつ。${o.cocktail.ings.map(x=>BY_ID[x].name).join('と')}で作ってね。`;
-    G.learned[o.cocktail.name]=true;
+    learn(o.cocktail.name);
   }
   if(o.kind==='omakase'&&D.tell&&!m.prefKnown){cust.text=`おまかせで。${ch.pref}`;m.prefKnown=true}
   if(o.kind==='mood'){if(D.tell&&!G.moodKnown[o.moodKey]){cust.text+=' '+o.mood.hint;G.moodKnown[o.moodKey]=true}if(o.mood.patience)cust.patienceMax*=o.mood.patience,cust.patience=cust.patienceMax}
@@ -1089,6 +1090,7 @@ function serve(){
   const ids=N.glass.map(i=>i.id);
   N.glass=[];
   if(res.grade!=='fail') N.lastDrink={ids,name:cust.char.name};
+  if(o.kind==='named'&&o.mod!=='na'&&res.grade==='perfect') learn(o.cocktail.name);
   if(o.count>1){
     o.grades.push(res.grade); o.money+=res.money; o.served++;
     if(res.grade!=='fail'&&o.served<o.count){
@@ -1342,8 +1344,12 @@ function renderShelf(){
 }
 
 function renderRecipes(){
-  $('recipeList').innerHTML=COCKTAILS.map(c=>`<div><b>${c.name}</b>${c.na?' <small>(ノンアル)</small>':''}<br>${c.ings.map(i=>BY_ID[i].name).join(' + ')}</div>`).join('');
+  const own=!!(D&&G&&D.book==='learned');
+  const list=own?COCKTAILS.filter(c=>G.learned[c.name]):COCKTAILS;
+  $('recipeList').innerHTML=list.length?list.map(c=>`<div><b>${c.name}</b>${c.na?' <small>(ノンアル)</small>':''}<br>${c.ings.map(i=>BY_ID[i].name).join(' + ')}</div>`).join(''):'<div style="grid-column:1/-1">まだ白紙。客に教わったレシピと、一度ちゃんと作れたレシピがここに増えていく。</div>';
+  $('recipeNote').textContent=own?`${list.length}/${COCKTAILS.length}`:'';
 }
+function learn(name){if(!G.learned[name]){G.learned[name]=true;renderRecipes();if(D.book==='learned')toast(`レシピ帳に「${name}」を書き足した`)}}
 
 let toastT;
 function toast(msg){$('toast').textContent=msg;clearTimeout(toastT);toastT=setTimeout(()=>$('toast').textContent='',1500)}
