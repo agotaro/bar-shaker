@@ -18,6 +18,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:4px
 header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
 .stats{display:flex;gap:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
 .stats b{color:var(--accent);font-size:16px}
+.snd{font-size:16px;padding:2px 6px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);line-height:1}
 .title .nightTag{font-size:12px;color:var(--muted);font-weight:600;margin-left:6px}
 .title .nightTag b{color:var(--accent)}
 .clockrow{display:flex;align-items:center;gap:10px;margin:-2px 0 10px}
@@ -166,7 +167,7 @@ details.recipes summary{cursor:pointer;color:var(--text);font-weight:600}
 <div id="app">
   <header>
     <div class="title">🍸 Bar Shaker <span class="nightTag">夜 <b id="night">1</b>/7</span></div>
-    <div class="stats"><span>スコア <b id="score">0</b></span><span>今夜 <b id="sales">¥0</b></span><span>所持金 <b id="money">¥0</b></span></div>
+    <div class="stats"><span>スコア <b id="score">0</b></span><span>今夜 <b id="sales">¥0</b></span><span>所持金 <b id="money">¥0</b></span><button id="sndBtn" class="snd" title="音のオン・オフ">🔊</button></div>
   </header>
   <div class="clockrow"><b id="clock">19:00</b><div class="daybar"><div id="dayFill"></div><i id="loMark"></i></div><small id="clockNote">開店</small></div>
 
@@ -890,7 +891,7 @@ function unlock(id){
   const a=loadAch(); if(a[id]) return; const def=ACH.find(x=>x.id===id); if(!def) return;
   a[id]=Date.now(); try{localStorage.setItem(ACH_KEY,JSON.stringify(a))}catch(e){}
   if(N) (N.newAch=N.newAch||[]).push(def);
-  achQueue.push(def); if(achQueue.length===1) showAchToast();
+  achQueue.push(def); if(achQueue.length===1) showAchToast(); if(typeof sfx!=='undefined')sfx.ach();
 }
 function showAchToast(){
   const def=achQueue[0]; if(!def) return;
@@ -1078,7 +1079,7 @@ function addIng(ing){
   if(G.stock[ing.id]<=have){toast(have?`${ing.name}はもう残りがない`:`${ing.name}を切らしてる！`);return}
   if(have>=2){toast(`${ing.name}はそれ以上入らない`);return}
   if(N.glass.length>=MAX){toast('グラスがいっぱい！');shakeGlass();return}
-  N.glass.push(ing); renderGlass();
+  N.glass.push(ing); renderGlass(); sfx.pour();
 }
 function removeIng(id){if(!canMix())return;const i=N.glass.map(g=>g.id).lastIndexOf(id);if(i>=0)N.glass.splice(i,1);renderGlass()}
 
@@ -1086,6 +1087,7 @@ function serve(){
   const cust=activeCust(); if(!canMix()) return;
   if(!N.glass.length){toast('グラスが空だよ！');shakeGlass();return}
   const o=cust.order, res=evaluate(cust);
+  sfx.clink();
   N.glass.forEach(i=>{G.stock[i.id]=Math.max(0,G.stock[i.id]-1);if(G.stock[i.id]<=0)N.stockout=true});
   const ids=N.glass.map(i=>i.id);
   N.glass=[];
@@ -1239,6 +1241,7 @@ function finishCust(cust,res,ids){
   }else if(res.grade==='partial'){pts=30;N.combo=0}
   else N.combo=0;
   res.pts=pts; res.combo=N.combo; N.score+=pts;
+  if(res.grade==='perfect')sfx.perfect();else if(res.grade==='partial')sfx.partial();else sfx.fail();
   N.results.push({char:cust.char,grade:res.grade});
   const k=cust.order.kind;
   if(res.grade==='perfect'){
@@ -1357,6 +1360,7 @@ function shakeGlass(){const g=$('glass');g.classList.remove('shake');void g.offs
 
 /* ---------- 閉店・仕入れ ---------- */
 function endNight(){
+  sfx.bell();
   const rent=rentNow();
   G.money-=rent; G.score=(G.score||0)+N.score;
   G.history.push({night:G.night,sales:N.sales,rent,perfect:N.perfect,customers:N.results.length,score:N.score,maxCombo:N.maxCombo});
@@ -1445,6 +1449,76 @@ function showAch(){
   $('card').innerHTML=`<h1>🏆 実績</h1><p>${Object.keys(a).length} / ${ACH.length}</p><div class="achlist">${list}</div><button id="back" class="ghost">戻る</button>`;
   $('overlay').hidden=false; $('back').onclick=showTitle;
 }
+
+/* ---------- サウンド ---------- */
+const SND={ctx:null,on:true};
+try{SND.on=localStorage.getItem('barshaker.sound')!=='off'}catch(e){}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function audioInit(){
+  if(SND.ctx){if(SND.ctx.state==='suspended')SND.ctx.resume();return}
+  const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  const ctx=SND.ctx=new AC();
+  SND.master=ctx.createGain(); SND.master.gain.value=SND.on?1:0; SND.master.connect(ctx.destination);
+  SND.bgm=ctx.createGain(); SND.bgm.gain.value=0.2; SND.bgm.connect(SND.master);
+  SND.sfx=ctx.createGain(); SND.sfx.gain.value=0.45; SND.sfx.connect(SND.master);
+  const len=ctx.sampleRate; const buf=ctx.createBuffer(1,len,ctx.sampleRate); const d=buf.getChannelData(0); for(let i=0;i<len;i++)d[i]=Math.random()*2-1; SND.noise=buf;
+  bgmStart(); renderSoundBtn();
+}
+function setSound(on){SND.on=on;try{localStorage.setItem('barshaker.sound',on?'on':'off')}catch(e){} if(SND.master)SND.master.gain.setTargetAtTime(on?1:0,SND.ctx.currentTime,0.05); renderSoundBtn()}
+function renderSoundBtn(){$('sndBtn').textContent=SND.on?'🔊':'🔇'}
+function tone(freq,t,dur,o={}){
+  if(!SND.ctx) return; const ctx=SND.ctx, osc=ctx.createOscillator(), g=ctx.createGain();
+  osc.type=o.type||'sine'; osc.frequency.value=freq; osc.detune.value=o.detune||0;
+  const gain=o.gain??0.2, att=o.attack??0.01, rel=o.release??0.1;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+att); g.gain.setTargetAtTime(0,t+dur,rel/3);
+  osc.connect(g); g.connect(o.dest||SND.sfx); osc.start(t); osc.stop(t+dur+rel+0.05);
+}
+function noiseHit(t,dur,o={}){
+  if(!SND.ctx) return; const ctx=SND.ctx, src=ctx.createBufferSource(), f=ctx.createBiquadFilter(), g=ctx.createGain();
+  src.buffer=SND.noise; f.type=o.lp?'lowpass':'highpass'; f.frequency.value=o.hp||4000;
+  g.gain.setValueAtTime(o.gain??0.2,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  src.connect(f); f.connect(g); g.connect(o.dest||SND.sfx); src.start(t); src.stop(t+dur+0.02);
+}
+// BGM: ゆったりしたジャズ風ループ
+const BGM={bpm:88,step:0,next:0,timer:null};
+const CHORDS=[[50,[62,65,69,72]],[43,[59,62,65,69]],[48,[60,64,67,71]],[48,[64,67,71,74]],[53,[60,64,69,72]],[52,[59,62,67,71]],[45,[60,64,67,71]],[43,[59,62,65,69]]];
+function bgmIntensity(){ if(!N||N.ending||!$('overlay').hidden) return 0; return N.clock>=24?0:N.clock>=21?2:1 }
+function bgmStart(){ if(BGM.timer) return; BGM.next=SND.ctx.currentTime+0.1; BGM.step=0; BGM.timer=setInterval(bgmTick,30) }
+function bgmTick(){
+  const ctx=SND.ctx; if(!ctx||ctx.state!=='running') return;
+  while(BGM.next<ctx.currentTime+0.15){
+    bgmStep(BGM.step,BGM.next);
+    const eighth=60/BGM.bpm/2; BGM.next+=(BGM.step%2===0)?eighth*1.2:eighth*0.8; BGM.step++;
+  }
+}
+function bgmStep(step,t){
+  const inten=bgmIntensity(), bar=Math.floor(step/8)%CHORDS.length, sub=step%8, [root,chord]=CHORDS[bar], dest=SND.bgm;
+  const chordHit=sub===0||(inten>0&&sub===3);
+  if(chordHit) chord.forEach((m,i)=>{tone(mtof(m),t+i*0.012,0.8,{type:'triangle',gain:0.05,dest,attack:0.02,release:0.7,detune:(i%2?4:-4)});tone(mtof(m),t,0.8,{type:'sine',gain:0.035,dest,attack:0.02,release:0.7})});
+  if(sub%2===0){
+    const nextRoot=CHORDS[(bar+1)%CHORDS.length][0];
+    const bassNotes=[root,root+7,root+12,nextRoot>root?nextRoot-1:nextRoot+1];
+    const m=inten===0&&sub===6?root+7:bassNotes[sub/2];
+    tone(mtof(m),t,0.32,{type:'sine',gain:0.17,dest,attack:0.01,release:0.15}); tone(mtof(m),t,0.32,{type:'triangle',gain:0.05,dest,attack:0.01,release:0.15});
+  }
+  if(inten>=1) noiseHit(t,0.05,{gain:sub%2?0.025:0.045,hp:7000,dest});
+  if(inten>=2){ if(sub===0||sub===4) tone(55,t,0.12,{type:'sine',gain:0.28,dest,attack:0.005,release:0.08}); if(sub===2||sub===6) noiseHit(t,0.03,{gain:0.12,hp:2500,dest}); }
+  if(inten>=1&&(sub===1||sub===5||sub===7)&&Math.random()<0.18){ const m=chord[Math.floor(Math.random()*chord.length)]+12; tone(mtof(m),t,0.25,{type:'sine',gain:0.05,dest,attack:0.01,release:0.3}) }
+}
+// 効果音
+const sfx={
+  pour(){const t=SND.ctx?SND.ctx.currentTime:0; noiseHit(t,0.28,{gain:0.14,hp:1200}); tone(520,t,0.08,{type:'sine',gain:0.05,attack:0.02})},
+  clink(){const t=SND.ctx?SND.ctx.currentTime:0; tone(1900,t,0.05,{type:'triangle',gain:0.12,release:0.15}); tone(2850,t,0.04,{type:'sine',gain:0.06,release:0.2})},
+  perfect(){const t=SND.ctx?SND.ctx.currentTime:0; [72,76,79,84].forEach((m,i)=>tone(mtof(m),t+i*0.07,0.16,{type:'triangle',gain:0.12,release:0.25}))},
+  partial(){const t=SND.ctx?SND.ctx.currentTime:0; [67,64].forEach((m,i)=>tone(mtof(m),t+i*0.12,0.18,{type:'triangle',gain:0.1,release:0.2}))},
+  fail(){const t=SND.ctx?SND.ctx.currentTime:0; tone(110,t,0.3,{type:'sawtooth',gain:0.08,release:0.2}); tone(104,t,0.3,{type:'sawtooth',gain:0.06,release:0.2})},
+  ach(){const t=SND.ctx?SND.ctx.currentTime:0; [72,72,79,84,88].forEach((m,i)=>tone(mtof(m),t+i*0.09,0.2,{type:'triangle',gain:0.12,release:0.3}))},
+  bell(){const t=SND.ctx?SND.ctx.currentTime:0; [84,88].forEach((m,i)=>tone(mtof(m),t+i*0.25,0.5,{type:'sine',gain:0.1,release:0.6}))},
+};
+document.addEventListener('pointerdown',audioInit,{once:true});
+document.addEventListener('pointerdown',()=>{if(SND.ctx&&SND.ctx.state==='suspended')SND.ctx.resume()});
+$('sndBtn').onclick=e=>{e.stopPropagation();audioInit();setSound(!SND.on)};
+renderSoundBtn();
 
 $('serve').onclick=serve;
 $('clear').onclick=()=>{if(!canMix())return;N.glass=[];renderGlass()};
