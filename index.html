@@ -199,7 +199,7 @@ details.recipes summary{cursor:pointer;color:var(--text);font-weight:600}
 <script>
 /* ---------- キャラクター ---------- */
 const CHARS=[
-{id:'tanaka',hours:[20,24],likes:['fresh'],hates:['sweet'],pref:'さっぱりしたのが好きで、甘いのは苦手です。',name:'田中',title:'疲れた会社員',lines:{ok:'…はぁ、うまい。生き返る',meh:'まあ、いいです…疲れてるんで',ng:'違う…けど、もういいです…'},svg:`
+{id:'tanaka',fav:{mood:2},mood:'tired',hours:[20,24],likes:['fresh'],hates:['sweet'],pref:'さっぱりしたのが好きで、甘いのは苦手です。',name:'田中',title:'疲れた会社員',lines:{ok:'…はぁ、うまい。生き返る',meh:'まあ、いいです…疲れてるんで',ng:'違う…けど、もういいです…'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-tanaka"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#3d4a6b"/><g clip-path="url(#cp-tanaka)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#232b45"/>
@@ -217,7 +217,7 @@ const CHARS=[
 <path d="M36 46 Q40 44.5 44 46" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
 </g></svg>`},
 
-{id:'rina',hours:[22,26],likes:['sweet','fruity'],hates:['bitter'],pref:'甘くてフルーティなやつ！苦いのはムリ。',name:'リナ',title:'パリピ',lines:{ok:'ヤバい！映える！',meh:'んー、ビミョー？',ng:'え、なにこれ。ウケないんだけど'},svg:`
+{id:'rina',fav:{wild:2,mood:1.5},mood:'hyped',hours:[22,26],likes:['sweet','fruity'],hates:['bitter'],pref:'甘くてフルーティなやつ！苦いのはムリ。',name:'リナ',title:'パリピ',lines:{ok:'ヤバい！映える！',meh:'んー、ビミョー？',ng:'え、なにこれ。ウケないんだけど'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-rina"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#ff8fb1"/><g clip-path="url(#cp-rina)">
 <path d="M10 34 Q8 8 40 8 Q72 8 70 34 L72 86 L8 86Z" fill="#ffc857"/>
@@ -236,7 +236,7 @@ const CHARS=[
 <circle cx="59" cy="43" r="3" fill="none" stroke="#f5b400" stroke-width="1.6"/>
 </g></svg>`},
 
-{id:'gen',hours:[19,22],likes:['strong','bitter'],hates:['sweet'],pref:'強くて苦いのがいい。甘いのは要らん。',name:'源さん',title:'常連の老人',lines:{ok:'ふむ。腕を上げたな',meh:'昔のマスターは一発だったがね',ng:'…はぁ。ワシの若い頃はな'},svg:`
+{id:'gen',fav:{named:1.5},hours:[19,22],likes:['strong','bitter'],hates:['sweet'],pref:'強くて苦いのがいい。甘いのは要らん。',name:'源さん',title:'常連の老人',lines:{ok:'ふむ。腕を上げたな',meh:'昔のマスターは一発だったがね',ng:'…はぁ。ワシの若い頃はな'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-gen"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#8b6f47"/><g clip-path="url(#cp-gen)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5b3f1f"/>
@@ -254,7 +254,7 @@ const CHARS=[
 <path d="M19 30 Q40 24 61 30 L63 33 Q40 27 17 33Z" fill="#3a2917"/>
 </g></svg>`},
 
-{id:'holmes',hours:[21,25],likes:['bitter'],hates:['fruity'],pref:'苦味のあるものを。果物は好まない。',name:'ホームズ',title:'探偵',lines:{ok:'…完璧だ。証拠は要らない',meh:'惜しいな。何かが足りない',ng:'犯人は、お前だ'},svg:`
+{id:'holmes',fav:{like:2.5},hours:[21,25],likes:['bitter'],hates:['fruity'],pref:'苦味のあるものを。果物は好まない。',name:'ホームズ',title:'探偵',lines:{ok:'…完璧だ。証拠は要らない',meh:'惜しいな。何かが足りない',ng:'犯人は、お前だ'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-holmes"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#2f3e46"/><g clip-path="url(#cp-holmes)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#a0793d"/>
@@ -270,7 +270,7 @@ const CHARS=[
 <ellipse cx="40" cy="26" rx="26" ry="4" fill="#3b2f2f"/>
 </g></svg>`},
 
-{id:'mei',hours:[19,23],likes:['sweet'],hates:['strong'],pref:'甘いのが好きです。強いお酒はちょっと…',name:'メイ',title:'大学生',lines:{ok:'わー！おいしい！',meh:'あ、うん、ありがとうございます…',ng:'…泣きそう'},svg:`
+{id:'mei',fav:{named:1.5},mod:'na',hours:[19,23],likes:['sweet'],hates:['strong'],pref:'甘いのが好きです。強いお酒はちょっと…',name:'メイ',title:'大学生',lines:{ok:'わー！おいしい！',meh:'あ、うん、ありがとうございます…',ng:'…泣きそう'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-mei"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#f4a261"/><g clip-path="url(#cp-mei)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#4f8a5b"/>
@@ -289,7 +289,7 @@ const CHARS=[
 <path d="M36 45 Q40 48 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
 </g></svg>`},
 
-{id:'robo',hours:[19,26],likes:['sour','fresh'],hates:['sweet'],pref:'酸味ト爽快感ヲ要求。糖分ハ不要。',name:'RB-7',title:'試飲ロボット',lines:{ok:'評価：最適解。',meh:'評価：許容範囲内。',ng:'エラー。注文ト一致シマセン。'},svg:`
+{id:'robo',fav:{same:3},hours:[19,26],likes:['sour','fresh'],hates:['sweet'],pref:'酸味ト爽快感ヲ要求。糖分ハ不要。',name:'RB-7',title:'試飲ロボット',lines:{ok:'評価：最適解。',meh:'評価：許容範囲内。',ng:'エラー。注文ト一致シマセン。'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-robo"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#4e6e8e"/><g clip-path="url(#cp-robo)">
 <rect x="14" y="56" width="52" height="40" rx="8" fill="#9fb3c8"/>
@@ -305,7 +305,7 @@ const CHARS=[
 <circle cx="18" cy="32" r="3" fill="#7f95ad"/><circle cx="62" cy="32" r="3" fill="#7f95ad"/>
 </g></svg>`},
 
-{id:'nyanta',hours:[23,26],likes:['fruity'],hates:['strong'],pref:'ニャ（果物が好き。お酒は弱い）',name:'ニャン太',title:'看板猫（客側）',lines:{ok:'ニャ〜〜！',meh:'ニャ…',ng:'フシャーッ！'},svg:`
+{id:'nyanta',fav:{abstract:2.5},hours:[23,26],likes:['fruity'],hates:['strong'],pref:'ニャ（果物が好き。お酒は弱い）',name:'ニャン太',title:'看板猫（客側）',lines:{ok:'ニャ〜〜！',meh:'ニャ…',ng:'フシャーッ！'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-nyanta"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#f2c14e"/><g clip-path="url(#cp-nyanta)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f39c3d"/>
@@ -328,7 +328,7 @@ const CHARS=[
 <path d="M28 41 L18 39 M28 44 L18 46 M52 41 L62 39 M52 44 L62 46" stroke="#a0674f" stroke-width="1.2" stroke-linecap="round"/>
 </g></svg>`},
 
-{id:'vlad',hours:[24,26],likes:['strong'],hates:['fresh'],pref:'強いものを。爽やかなのは性に合わん。',name:'ヴラド',title:'吸血鬼（夜勤明け）',lines:{ok:'ふふ…血より旨い',meh:'悪くない。血には劣るが',ng:'貴様、闇に葬るぞ'},svg:`
+{id:'vlad',fav:{named:1.5},mod:'strong',hours:[24,26],likes:['strong'],hates:['fresh'],pref:'強いものを。爽やかなのは性に合わん。',name:'ヴラド',title:'吸血鬼（夜勤明け）',lines:{ok:'ふふ…血より旨い',meh:'悪くない。血には劣るが',ng:'貴様、闇に葬るぞ'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-vlad"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#3a0f2e"/><g clip-path="url(#cp-vlad)">
 <path d="M14 62 L22 26 L40 48 L58 26 L66 62Z" fill="#1a0b16"/>
@@ -346,7 +346,7 @@ const CHARS=[
 <path d="M36 45 L37.5 49.5 L39 45.5Z M44 45 L42.5 49.5 L41 45.5Z" fill="#fff"/>
 </g></svg>`},
 
-{id:'mira',hours:[22,26],likes:['sweet','sour'],hates:['bitter'],pref:'甘酸っぱいのが好みよ。苦いのは呪うわ。',name:'ミラ',title:'魔女（自称）',lines:{ok:'これぞ魔法の一杯ね',meh:'呪文が一つ抜けてるわ',ng:'カエルにされたい？'},svg:`
+{id:'mira',fav:{like:2.5},hours:[22,26],likes:['sweet','sour'],hates:['bitter'],pref:'甘酸っぱいのが好みよ。苦いのは呪うわ。',name:'ミラ',title:'魔女（自称）',lines:{ok:'これぞ魔法の一杯ね',meh:'呪文が一つ抜けてるわ',ng:'カエルにされたい？'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-mira"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#5b3a8e"/><g clip-path="url(#cp-mira)">
 <path d="M12 34 Q10 8 40 8 Q70 8 68 34 L72 86 L8 86Z" fill="#2aa198"/>
@@ -366,7 +366,7 @@ const CHARS=[
 <path d="M63 11 l1.5 3 3 .4 -2.2 2.1 .6 3.1 -2.9 -1.5 -2.9 1.5 .6 -3.1 -2.2 -2.1 3 -.4z" fill="#f3b95f"/>
 </g></svg>`},
 
-{id:'pi',hours:[19,26],likes:['fruity','fresh'],hates:['bitter'],pref:'果物ト爽ヤカサ、求ム。苦味、拒否。',name:'ピー',title:'地球観光中',lines:{ok:'地球ノ飲ミ物、最高',meh:'母星ノほうガ美味シイ',ng:'侵略、決定'},svg:`
+{id:'pi',fav:{omakase:3},hours:[19,26],likes:['fruity','fresh'],hates:['bitter'],pref:'果物ト爽ヤカサ、求ム。苦味、拒否。',name:'ピー',title:'地球観光中',lines:{ok:'地球ノ飲ミ物、最高',meh:'母星ノほうガ美味シイ',ng:'侵略、決定'},svg:`
 <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-pi"><circle cx="40" cy="40" r="40"/></clipPath></defs>
 <circle cx="40" cy="40" r="40" fill="#0b3d3d"/><g clip-path="url(#cp-pi)">
 <path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#8fa3b0"/>
@@ -382,6 +382,302 @@ const CHARS=[
 <ellipse cx="46" cy="29" rx="1.8" ry="2.5" fill="#fff" opacity=".9"/>
 <path d="M37 45 Q40 47 43 45" stroke="#3f8f2f" stroke-width="1.5" fill="none" stroke-linecap="round"/>
 </g></svg>`},
+{id:'masa',name:'マサ',title:'寿司職人',hours:[23, 26],likes:["sour", "fresh"],hates:["sweet"],pref:'酸味とキレ。甘いのは要らねえ。',fav:{"abstract": 2.5},lines:{ok:'…いい仕事だ',meh:'まあ、握りで言えば並だな',ng:'ネタが違う'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-masa"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#3b4a5a"/><g clip-path="url(#cp-masa)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f4f1ea"/>
+<path d="M30 54 L40 70 L50 54 L53 58 L40 78 L27 58Z" fill="#dcd6c8"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f2cfae"/>
+<path d="M21 30 Q21 13 40 13 Q59 13 59 30 Q52 24 40 25 Q28 24 21 30Z" fill="#2b2b2b"/>
+<path d="M20 24 Q40 18 60 24 L60 29 Q40 23 20 29Z" fill="#fff"/>
+<path d="M22 26 Q40 20 58 26" fill="none" stroke="#2b3a8a" stroke-width="1.4" stroke-dasharray="3 3"/>
+<path d="M58 25 L67 19 L65 27 L70 27 L62 30Z" fill="#fff"/>
+<path d="M27 31 L37 30 M43 30 L53 31" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+<path d="M30 36 L36 36 M44 36 L50 36" stroke="#333" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M35 45 L45 45" stroke="#a0674f" stroke-width="1.6" stroke-linecap="round"/>
+</g></svg>`},
+{id:'hikari',name:'ヒカリ',title:'看護師（準夜勤明け）',hours:[24, 26],likes:["sweet"],hates:["bitter"],pref:'甘いのが好き。苦いのは無理。',fav:{"mood": 2},mood:'tired',mod:'weak',lines:{ok:'はぁ〜、生き返る…',meh:'うん、ありがとう…',ng:'今日はもう、いいや…'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-hikari"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#4c7a8a"/><g clip-path="url(#cp-hikari)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5fb3a3"/>
+<path d="M33 54 L40 63 L47 54Z" fill="#3f8f80"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="53" cy="15" r="7" fill="#5a3a2a"/>
+<circle cx="53" cy="15" r="7" fill="none" stroke="#f28ca0" stroke-width="1.6"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 31 Q21 12 40 12 Q59 12 59 31 Q55 24 45 25 Q36 20 21 31Z" fill="#5a3a2a"/>
+<path d="M29 35 Q33 37.5 37 35 M43 35 Q47 37.5 51 35" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<path d="M30 39.5 Q33 41.5 36 39.5 M44 39.5 Q47 41.5 50 39.5" stroke="#b58aa0" stroke-width="1.3" fill="none"/>
+<path d="M36 45 Q40 47 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<rect x="52" y="60" width="2.6" height="11" fill="#333" transform="rotate(-8 53 65)"/>
+</g></svg>`},
+{id:'oyuki',name:'おユキ',title:'幽霊',hours:[24, 26],likes:["strong"],hates:["sweet"],pref:'…強いのを…甘いのは…いや…',fav:{"mood": 2},mood:'down',mod:'strong',lines:{ok:'…成仏しそう',meh:'…ふう…',ng:'…うらめしや…'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-oyuki"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2a2440"/><g clip-path="url(#cp-oyuki)">
+<path d="M12 30 Q8 22 14 18 Q18 24 14 30 Q20 26 18 34 Q14 38 12 30Z" fill="#8fd3ff" opacity=".8"/>
+<g opacity=".94">
+<path d="M18 40 Q18 14 40 14 Q62 14 62 40 L62 70 Q56 62 50 70 Q45 78 40 70 Q35 78 30 70 Q24 62 18 70Z" fill="#e6e9ff"/>
+<path d="M18 64 L18 40 Q18 14 40 14 Q62 14 62 40 L62 30 Q57 25 52 29 L48 26 L44 35 L40 26 L36 42 L33 29 L29 64Z" fill="#1a1a2a"/>
+<ellipse cx="52" cy="40" rx="3" ry="4.2" fill="#333"/>
+<circle cx="52.8" cy="38.6" r="1" fill="#fff"/>
+<path d="M47 50 L52 50" stroke="#8a7a90" stroke-width="1.3" stroke-linecap="round"/>
+<circle cx="57" cy="46" r="2.5" fill="#c9b8ff" opacity=".6"/>
+</g>
+</g></svg>`},
+{id:'ramses',name:'ラムセス',title:'ミイラ',hours:[22, 26],likes:["fruity", "fresh"],hates:["strong"],pref:'果物と、潤うもの。強いのは体が乾く。',fav:{"abstract": 2.5},lines:{ok:'水分…補給…！',meh:'まあ、乾かないだけマシだ',ng:'包帯が…乾く…'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-ramses"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#6b5b2a"/><g clip-path="url(#cp-ramses)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#e6dcc3"/>
+<path d="M8 62 Q40 58 72 62 M6 70 Q40 66 74 70 M10 78 Q40 74 70 78" stroke="#c9b98f" stroke-width="2" fill="none"/>
+<path d="M28 56 Q40 68 52 56" stroke="#e8b923" stroke-width="3" fill="none"/>
+<circle cx="40" cy="66" r="3" fill="#2aa198"/>
+<rect x="34" y="44" width="12" height="12" fill="#e6dcc3"/>
+<circle cx="40" cy="32" r="19" fill="#e6dcc3"/>
+<path d="M22 24 Q40 20 58 24 M21 31 Q40 27 59 31 M22 40 Q40 44 58 40 M25 47 Q40 51 55 47" stroke="#c9b98f" stroke-width="2.2" fill="none"/>
+<ellipse cx="47" cy="35" rx="4" ry="3" fill="#1a1a1a"/>
+<circle cx="48" cy="34" r="1" fill="#fff"/>
+<path d="M26 31 Q34 29 38 33 L37 38 Q31 39 25 36Z" fill="#dccfb0"/>
+<path d="M58 26 Q68 20 66 12" stroke="#e6dcc3" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M36 45 L44 45" stroke="#9a8a6a" stroke-width="1.5" stroke-linecap="round"/>
+</g></svg>`},
+{id:'yukio',name:'ユキオ',title:'雪だるま',hours:[19, 22],likes:["fresh", "sour"],hates:["strong"],pref:'冷たくてさっぱり、酸っぱいのも好き。強いのは溶ける。',fav:{"mood": 2.5},mood:'rush',lines:{ok:'ひんやり最高！',meh:'ちょっと溶けたかも',ng:'あつい！溶ける！'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-yukio"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#7fb3d5"/><g clip-path="url(#cp-yukio)">
+<circle cx="12" cy="20" r="1.5" fill="#fff" opacity=".8"/><circle cx="66" cy="14" r="1.2" fill="#fff" opacity=".8"/><circle cx="70" cy="40" r="1.5" fill="#fff" opacity=".7"/><circle cx="10" cy="50" r="1.2" fill="#fff" opacity=".7"/>
+<circle cx="40" cy="68" r="24" fill="#fff"/>
+<circle cx="40" cy="30" r="19" fill="#fff"/>
+<path d="M22 48 Q40 56 58 48 L58 54 Q40 62 22 54Z" fill="#c0392b"/>
+<path d="M50 52 L56 68 L48 66Z" fill="#c0392b"/>
+<path d="M28 20 L30 4 L54 4 L52 20Z" fill="#3a6ea5"/>
+<rect x="26" y="18" width="30" height="4" rx="1" fill="#2c5282"/>
+<circle cx="33" cy="30" r="2.5" fill="#222"/><circle cx="47" cy="30" r="2.5" fill="#222"/>
+<path d="M40 33 L54 37 L40 39Z" fill="#f39c3d"/>
+<circle cx="34" cy="43" r="1.2" fill="#222"/><circle cx="38" cy="45" r="1.2" fill="#222"/><circle cx="42" cy="45" r="1.2" fill="#222"/><circle cx="46" cy="43" r="1.2" fill="#222"/>
+<circle cx="40" cy="64" r="2" fill="#222"/><circle cx="40" cy="72" r="2" fill="#222"/>
+</g></svg>`},
+{id:'regina',name:'レジーナ',title:'女王様',hours:[21, 24],likes:["sweet", "fruity"],hates:["bitter"],pref:'甘くて華やかなもの。苦いのは下がってよろしい。',fav:{"omakase": 3, "wild": 2},lines:{ok:'ふふ、褒めて遣わす',meh:'及第点ね',ng:'首をはねますわよ'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-regina"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#5c2a5a"/><g clip-path="url(#cp-regina)">
+<path d="M12 34 Q10 8 40 8 Q70 8 68 34 L70 86 L10 86Z" fill="#8b3a2a"/>
+<path d="M12 86 Q14 58 40 56 Q66 58 68 86Z" fill="#b3132b"/>
+<path d="M14 62 Q40 52 66 62 L66 70 Q40 60 14 70Z" fill="#f5f0e6"/>
+<circle cx="20" cy="66" r="1.2" fill="#222"/><circle cx="30" cy="63" r="1.2" fill="#222"/><circle cx="40" cy="62" r="1.2" fill="#222"/><circle cx="50" cy="63" r="1.2" fill="#222"/><circle cx="60" cy="66" r="1.2" fill="#222"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 32 Q21 12 40 12 Q59 12 59 32 Q56 22 44 24 Q34 20 21 32Z" fill="#8b3a2a"/>
+<path d="M24 20 L28 6 L34 14 L40 4 L46 14 L52 6 L56 20Z" fill="#f3b95f"/>
+<rect x="24" y="17" width="32" height="4" fill="#e0a030"/>
+<circle cx="40" cy="12" r="2" fill="#e03131"/><circle cx="30" cy="15" r="1.5" fill="#2aa198"/><circle cx="50" cy="15" r="1.5" fill="#2aa198"/>
+<path d="M29 35 Q33 33 37 35 M43 35 Q47 33 51 35" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<ellipse cx="33" cy="37" rx="2.6" ry="1.8" fill="#4a2a5a"/><ellipse cx="47" cy="37" rx="2.6" ry="1.8" fill="#4a2a5a"/>
+<path d="M36 45 Q40 43 44 45 Q40 48 36 45Z" fill="#c0392b"/>
+</g></svg>`},
+{id:'taihozan',name:'大鵬山',title:'力士',hours:[19, 22],likes:["strong", "sweet"],hates:["sour"],pref:'強くて甘いの。酸っぱいのは苦手だ。',fav:{"bulk": 4},mod:'strong',lines:{ok:'ごっつぁんです！',meh:'まあ…ごっつぁんです',ng:'物足りねえ'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-taihozan"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#8a3a2a"/><g clip-path="url(#cp-taihozan)">
+<path d="M0 86 Q2 50 40 48 Q78 50 80 86Z" fill="#f2cfae"/>
+<path d="M0 86 Q4 58 40 60 Q76 58 80 86Z" fill="#1f3a6a"/>
+<path d="M26 60 L40 78 L54 60" stroke="#f5f0e6" stroke-width="3" fill="none"/>
+<rect x="33" y="44" width="14" height="14" fill="#e8b892"/>
+<circle cx="40" cy="32" r="21" fill="#f2cfae"/>
+<path d="M21 28 Q21 11 40 11 Q59 11 59 28 Q52 22 40 22 Q28 22 21 28Z" fill="#1a1a1a"/>
+<path d="M36 12 Q40 2 47 7 Q45 12 40 11Z" fill="#1a1a1a"/>
+<path d="M31 35 L36 35 M44 35 L49 35" stroke="#333" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="28" cy="41" r="4" fill="#f4a3a3" opacity=".6"/><circle cx="52" cy="41" r="4" fill="#f4a3a3" opacity=".6"/>
+<path d="M35 46 Q40 49 45 46" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+{id:'sora',name:'ソラ',title:'宇宙飛行士',hours:[22, 26],likes:["fresh", "fruity"],hates:["bitter"],pref:'さっぱりしてフルーティなの。苦いのはダメ。',fav:{"named": 1.5},mod:'na',lines:{ok:'重力を感じない味だ',meh:'地上の味だね',ng:'打ち上げ延期だ…'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-sora"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#1c2a4a"/><g clip-path="url(#cp-sora)">
+<circle cx="14" cy="18" r="1.2" fill="#fff"/><circle cx="66" cy="10" r="1" fill="#fff"/><circle cx="70" cy="52" r="1.3" fill="#fff"/><circle cx="8" cy="56" r="1" fill="#fff"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f2f2f2"/>
+<rect x="18" y="62" width="10" height="6" rx="1" fill="#e03131"/>
+<rect x="52" y="62" width="9" height="8" rx="1" fill="#3a6ea5"/>
+<ellipse cx="40" cy="54" rx="16" ry="5" fill="#c9d6e3"/>
+<circle cx="40" cy="32" r="23" fill="#e8eef5"/>
+<circle cx="40" cy="33" r="17" fill="#2a3a5a"/>
+<circle cx="40" cy="36" r="12" fill="#f6d3b3"/>
+<path d="M28 34 Q28 24 40 24 Q52 24 52 34 Q46 28 40 30 Q34 28 28 34Z" fill="#3a2a1a"/>
+<circle cx="36" cy="37" r="1.8" fill="#333"/><circle cx="44" cy="37" r="1.8" fill="#333"/>
+<path d="M37 43 Q40 45 43 43" stroke="#a0674f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<path d="M26 26 Q34 16 48 18" stroke="#fff" stroke-width="2.5" fill="none" opacity=".6" stroke-linecap="round"/>
+<circle cx="40" cy="33" r="17" fill="none" stroke="#b8c8d8" stroke-width="2"/>
+</g></svg>`},
+{id:'kage',name:'カゲ',title:'忍者',hours:[24, 26],likes:["bitter", "fresh"],hates:["sweet"],pref:'…苦く、鋭く。甘いのは、要らぬ。',fav:{"mood": 2.5},mood:'rush',lines:{ok:'…見事',meh:'…まあ',ng:'…消える'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-kage"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2b2b33"/><g clip-path="url(#cp-kage)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#141418"/>
+<path d="M24 54 Q40 60 56 54 L58 60 Q40 66 22 60Z" fill="#c0392b"/>
+<path d="M54 58 L70 66 L64 70Z" fill="#c0392b"/>
+<rect x="34" y="44" width="12" height="12" fill="#141418"/>
+<circle cx="40" cy="32" r="19" fill="#141418"/>
+<circle cx="40" cy="32" r="19" fill="none" stroke="#3a3a44" stroke-width="1.5"/>
+<path d="M22 31 Q40 27 58 31 L58 38 Q40 42 22 38Z" fill="#e8b892"/>
+<path d="M28 35 Q33 32 37 35 Q33 37.5 28 35Z" fill="#222"/><path d="M43 35 Q47 32 52 35 Q47 37.5 43 35Z" fill="#222"/>
+<circle cx="34" cy="35" r="1.1" fill="#fff"/><circle cx="46" cy="35" r="1.1" fill="#fff"/>
+<path d="M27 31 L36 33 M53 31 L44 33" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+<path d="M57 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#9fb3c8"/>
+<circle cx="57" cy="21" r="1.2" fill="#222"/>
+</g></svg>`},
+{id:'twins',name:'ミミ＆ララ',title:'双子',hours:[20, 23],likes:["sweet"],hates:["bitter"],pref:'「甘いの！」「苦いのはやだ！」',fav:{"bulk": 4},bulkCount:2,lines:{ok:'「おいしい！」「おいしい！」',meh:'「んー」「んー」',ng:'「違う」「違う」'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-twins"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#ffb3c6"/><g clip-path="url(#cp-twins)">
+<path d="M-2 86 Q0 60 24 58 Q48 60 50 86Z" fill="#ff6b9d"/>
+<path d="M30 86 Q32 60 56 58 Q80 60 82 86Z" fill="#6bb3ff"/>
+<rect x="20" y="46" width="8" height="12" fill="#e8b892"/><rect x="52" y="46" width="8" height="12" fill="#e8b892"/>
+<path d="M8 34 L6 54 M40 34 L38 54" stroke="#4a2c2a" stroke-width="4" stroke-linecap="round"/>
+<path d="M40 34 L42 54 M72 34 L74 54" stroke="#4a2c2a" stroke-width="4" stroke-linecap="round"/>
+<circle cx="24" cy="36" r="14" fill="#f6d3b3"/>
+<circle cx="56" cy="36" r="14" fill="#f6d3b3"/>
+<path d="M10 34 Q10 20 24 20 Q38 20 38 34 Q34 27 24 29 Q14 27 10 34Z" fill="#4a2c2a"/>
+<path d="M42 34 Q42 20 56 20 Q70 20 70 34 Q66 27 56 29 Q46 27 42 34Z" fill="#4a2c2a"/>
+<path d="M6 24 L14 28 L6 32Z M22 24 L14 28 L22 32Z" fill="#e03131"/><circle cx="14" cy="28" r="1.5" fill="#e03131"/>
+<path d="M58 24 L66 28 L58 32Z M74 24 L66 28 L74 32Z" fill="#3a6ea5"/><circle cx="66" cy="28" r="1.5" fill="#3a6ea5"/>
+<circle cx="19" cy="38" r="1.8" fill="#333"/><circle cx="29" cy="38" r="1.8" fill="#333"/>
+<path d="M21 44 Q24 46 27 44" stroke="#a0674f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<circle cx="51" cy="38" r="1.8" fill="#333"/><path d="M59 38 Q61 36 63 38" stroke="#333" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M53 44 Q56 47 59 44" stroke="#a0674f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+{id:'pochi',name:'ポチ',title:'ドラゴンの子',hours:[19, 23],likes:["strong"],hates:["fresh"],pref:'ガオー（強いのが好き。冷たいのは苦手）',fav:{"named": 1.5},mod:'strong',lines:{ok:'ガオー！（喜）',meh:'ガオ…',ng:'ボッ（火を吹いた）'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-pochi"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2f6f4a"/><g clip-path="url(#cp-pochi)">
+<path d="M14 56 L4 40 L22 50Z" fill="#3fa36a"/><path d="M66 56 L76 40 L58 50Z" fill="#3fa36a"/>
+<path d="M60 80 Q78 70 70 56 Q68 68 58 74Z" fill="#5ac27a"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5ac27a"/>
+<path d="M30 58 Q40 66 50 58 L50 86 L30 86Z" fill="#c8f0a8"/>
+<circle cx="40" cy="33" r="20" fill="#5ac27a"/>
+<path d="M28 18 L24 6 L34 14Z" fill="#f3e2a0"/><path d="M52 18 L56 6 L46 14Z" fill="#f3e2a0"/>
+<ellipse cx="40" cy="42" rx="11" ry="7" fill="#c8f0a8"/>
+<circle cx="36" cy="41" r="1.3" fill="#2f4a2a"/><circle cx="44" cy="41" r="1.3" fill="#2f4a2a"/>
+<ellipse cx="32" cy="31" rx="4.5" ry="5.5" fill="#fff"/><ellipse cx="48" cy="31" rx="4.5" ry="5.5" fill="#fff"/>
+<circle cx="33" cy="32" r="2.8" fill="#2f4a2a"/><circle cx="47" cy="32" r="2.8" fill="#2f4a2a"/>
+<circle cx="34" cy="30.8" r="1" fill="#fff"/><circle cx="48" cy="30.8" r="1" fill="#fff"/>
+<path d="M34 47 Q40 51 46 47" stroke="#2f4a2a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<path d="M44 48 L45 51 L47 48Z" fill="#fff"/>
+</g></svg>`},
+{id:'john',name:'ジョン',title:'老紳士の犬',hours:[20, 24],likes:["bitter", "strong"],hates:["sweet"],pref:'苦味と強さ。甘いものは犬には毒だ。',fav:{"named": 1.5},lines:{ok:'ワン。実に良い',meh:'ふむ。悪くはない',ng:'ワンワン！（怒）'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-john"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#6b4f3a"/><g clip-path="url(#cp-john)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5a4a3a"/>
+<path d="M33 54 L40 66 L47 54Z" fill="#f5f0e6"/>
+<path d="M31 54 L39 58 L31 62Z M49 54 L41 58 L49 62Z" fill="#6b1e1e"/><circle cx="40" cy="58" r="2" fill="#6b1e1e"/>
+<path d="M20 26 Q12 40 20 54 Q28 48 26 30Z" fill="#8a5a3a"/>
+<path d="M60 26 Q68 40 60 54 Q52 48 54 30Z" fill="#8a5a3a"/>
+<ellipse cx="40" cy="34" rx="19" ry="18" fill="#c89a6a"/>
+<ellipse cx="40" cy="43" rx="10" ry="7" fill="#e0d0c0"/>
+<circle cx="33" cy="33" r="2.4" fill="#3a2a1a"/><circle cx="47" cy="33" r="2.4" fill="#3a2a1a"/>
+<circle cx="47" cy="33" r="5.5" fill="none" stroke="#f3b95f" stroke-width="1.6"/>
+<path d="M52 36 Q56 44 52 50" stroke="#f3b95f" stroke-width="1" fill="none"/>
+<ellipse cx="40" cy="41" rx="3.2" ry="2.4" fill="#2b1b10"/>
+<path d="M40 43 L40 46 M40 46 Q37 48 35 46 M40 46 Q43 48 45 46" stroke="#6b4a3a" stroke-width="1.2" fill="none"/>
+<path d="M28 27 L36 28 M52 27 L44 28" stroke="#d8d0c8" stroke-width="2.2" stroke-linecap="round"/>
+</g></svg>`},
+{id:'takumi',name:'タクミ',title:'配達員',hours:[19, 22],likes:["fresh"],hates:["strong"],pref:'さっぱり系で。仕事中なんで酒は無理っす。',fav:{"mood": 2},mood:'rush',mod:'na',lines:{ok:'助かります！次行きます！',meh:'ま、いいっす',ng:'時間ないんで…'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-takumi"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#e0a030"/><g clip-path="url(#cp-takumi)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#2c5282"/>
+<path d="M14 86 Q16 60 30 58 L34 86Z M66 86 Q64 60 50 58 L46 86Z" fill="#f2e33a"/>
+<path d="M18 72 L32 70 M62 72 L48 70" stroke="#9a9a9a" stroke-width="3"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f2cfae"/>
+<path d="M21 30 Q21 12 40 12 Q59 12 59 30 Q52 22 40 24 Q28 22 21 30Z" fill="#2b2b2b"/>
+<path d="M20 26 Q22 8 40 8 Q58 8 60 26Z" fill="#c0392b"/>
+<path d="M18 26 Q40 22 66 28 L64 31 Q40 26 18 29Z" fill="#a52a22"/>
+<path d="M22 28 Q16 38 22 46" stroke="#333" stroke-width="2.5" fill="none"/>
+<circle cx="22" cy="40" r="3.5" fill="#333"/>
+<path d="M24 43 Q30 48 36 46" stroke="#333" stroke-width="1.8" fill="none"/>
+<circle cx="36" cy="46" r="1.6" fill="#333"/>
+<circle cx="33" cy="36" r="2.2" fill="#333"/><circle cx="47" cy="36" r="2.2" fill="#333"/>
+<path d="M29 31 L36 32 M51 31 L44 32" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round"/>
+<path d="M34 43 Q40 49 46 43Z" fill="#a0674f"/>
+</g></svg>`},
+{id:'sayuri',name:'小百合',title:'演歌歌手',hours:[22, 26],likes:["strong", "bitter"],hates:["fruity"],pref:'強くて苦いのがいいわ。果物っぽいのは違うのよ。',fav:{"wild": 3},lines:{ok:'♪ 染みるわあ〜',meh:'まあまあね',ng:'歌う気が失せたわ'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-sayuri"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#7a1f3a"/><g clip-path="url(#cp-sayuri)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5b2a7a"/>
+<path d="M24 54 L40 74 L56 54 L60 60 L40 84 L20 60Z" fill="#f5f0e6"/>
+<path d="M28 56 L40 70 L52 56" stroke="#e03131" stroke-width="2" fill="none"/>
+<circle cx="18" cy="70" r="2" fill="#f3b95f"/><circle cx="62" cy="70" r="2" fill="#f3b95f"/><circle cx="24" cy="80" r="2" fill="#f3b95f"/><circle cx="58" cy="80" r="2" fill="#f3b95f"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<path d="M16 30 Q16 4 40 4 Q64 4 64 30 Q58 20 40 20 Q22 20 16 30Z" fill="#1a1a1a"/>
+<circle cx="40" cy="10" r="10" fill="#1a1a1a"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 30 Q21 14 40 14 Q59 14 59 30 Q54 24 40 24 Q26 24 21 30Z" fill="#1a1a1a"/>
+<path d="M56 10 L70 4" stroke="#f3b95f" stroke-width="2" stroke-linecap="round"/>
+<circle cx="70" cy="4" r="3" fill="#e03131"/>
+<path d="M66 8 L66 18 M62 8 L63 16" stroke="#f3b95f" stroke-width="1"/>
+<path d="M29 35 Q33 33 37 35 M43 35 Q47 33 51 35" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<ellipse cx="33" cy="37" rx="2.4" ry="1.6" fill="#333"/><ellipse cx="47" cy="37" rx="2.4" ry="1.6" fill="#333"/>
+<path d="M37 45 Q40 43 43 45 Q40 47.5 37 45Z" fill="#c0392b"/>
+<circle cx="45" cy="42" r=".8" fill="#5a3a2a"/>
+</g></svg>`},
+{id:'chief',name:'ピー長官',title:'ピーの上司',hours:[24, 26],likes:["bitter"],hates:["sweet"],pref:'苦味を。甘味は幼稚だ。',fav:{"omakase": 3},lines:{ok:'ピーの報告どおりだ',meh:'ピーの報告は誇張だな',ng:'ピー、減俸'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-chief"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#0b2d4d"/><g clip-path="url(#cp-chief)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#1f3a6a"/>
+<path d="M10 60 L26 56 L28 62 L12 66Z M70 60 L54 56 L52 62 L68 66Z" fill="#f3b95f"/>
+<circle cx="40" cy="66" r="2" fill="#f3b95f"/><circle cx="40" cy="74" r="2" fill="#f3b95f"/>
+<rect x="34" y="46" width="12" height="12" fill="#5ea54a"/>
+<path d="M28 14 Q22 6 18 6 M52 14 Q58 6 62 6" stroke="#5ea54a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<circle cx="18" cy="5" r="3" fill="#b8ff6b"/><circle cx="62" cy="5" r="3" fill="#b8ff6b"/>
+<ellipse cx="40" cy="28" rx="23" ry="22" fill="#5ea54a"/>
+<path d="M20 32 Q40 62 60 32Z" fill="#5ea54a"/>
+<ellipse cx="31" cy="30" rx="6" ry="6" transform="rotate(-10 31 30)" fill="#111"/>
+<ellipse cx="49" cy="30" rx="6" ry="6" transform="rotate(10 49 30)" fill="#111"/>
+<path d="M24 22 L36 26 M56 22 L44 26" stroke="#2f4a2a" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="29" cy="28" r="1.5" fill="#fff" opacity=".9"/><circle cx="47" cy="28" r="1.5" fill="#fff" opacity=".9"/>
+<path d="M35 46 L45 46" stroke="#2f4a2a" stroke-width="1.6" stroke-linecap="round"/>
+</g></svg>`},
+{id:'bones',name:'ボーン船長',title:'海賊',hours:[21, 25],likes:["strong"],hates:["fresh"],pref:'強いやつだ！爽やかなのは船乗りの飲み物じゃねえ！',fav:{"bulk": 3},mod:'strong',lines:{ok:'ガハハ！海の味だ！',meh:'まあ、飲めなくはない',ng:'板を歩かせるぞ'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-bones"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#1f3a4a"/><g clip-path="url(#cp-bones)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#8b1a2b"/>
+<path d="M30 54 L40 68 L50 54 L54 60 L40 78 L26 60Z" fill="#f5f0e6"/>
+<circle cx="40" cy="70" r="1.8" fill="#f3b95f"/><circle cx="40" cy="76" r="1.8" fill="#f3b95f"/>
+<rect x="34" y="44" width="12" height="12" fill="#e9c39c"/>
+<circle cx="40" cy="32" r="19" fill="#e9c39c"/>
+<path d="M24 38 Q26 58 40 60 Q54 58 56 38 Q50 48 40 48 Q30 48 24 38Z" fill="#2b2b2b"/>
+<circle cx="33" cy="36" r="2.4" fill="#333"/>
+<path d="M27 31 L37 33" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="47" cy="36" rx="5" ry="4.5" fill="#222"/>
+<path d="M22 27 L52 33" stroke="#222" stroke-width="1.5"/>
+<path d="M35 45 Q40 48 45 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M22 22 Q40 6 58 22 Q40 28 22 22Z" fill="#222"/>
+<path d="M12 28 Q40 14 68 28 Q40 36 12 28Z" fill="#111"/>
+<circle cx="40" cy="19" r="3" fill="#fff"/><circle cx="39" cy="18.5" r=".8" fill="#222"/><circle cx="41" cy="18.5" r=".8" fill="#222"/>
+<ellipse cx="66" cy="58" rx="5" ry="7" fill="#2ecc71"/>
+<circle cx="66" cy="49" r="4.5" fill="#2ecc71"/>
+<path d="M69 49 L75 50 L69 52Z" fill="#f3b95f"/>
+<circle cx="65" cy="48" r="1" fill="#222"/>
+<path d="M62 54 L58 62" stroke="#e03131" stroke-width="2"/>
+</g></svg>`},
+{id:'el',name:'エル',title:'天使',hours:[19, 22],likes:["sweet", "fruity"],hates:["strong"],pref:'甘くてフルーティなものを。お酒は…控えています。',fav:{"named": 1.5},mod:'na',lines:{ok:'天にも昇る心地です',meh:'…ありがとうございます',ng:'…罰は与えませんが'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-el"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#cfe3ff"/><g clip-path="url(#cp-el)">
+<path d="M18 62 Q0 50 8 36 Q14 48 24 52Z" fill="#fff"/>
+<path d="M62 62 Q80 50 72 36 Q66 48 56 52Z" fill="#fff"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f7f4ec"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<path d="M18 30 Q18 8 40 8 Q62 8 62 30 L62 50 Q40 56 18 50Z" fill="#f2d16b"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 32 Q21 12 40 12 Q59 12 59 32 Q54 24 46 26 Q40 22 30 26 Q24 24 21 32Z" fill="#f2d16b"/>
+<ellipse cx="40" cy="8" rx="14" ry="3.5" fill="none" stroke="#f3b95f" stroke-width="2.5"/>
+<path d="M29 36 Q33 33 37 36 M43 36 Q47 33 51 36" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<circle cx="29" cy="41" r="2.5" fill="#f4a3a3" opacity=".6"/><circle cx="51" cy="41" r="2.5" fill="#f4a3a3" opacity=".6"/>
+<path d="M36 45 Q40 47.5 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+{id:'bell',name:'ベル',title:'悪魔',hours:[24, 26],likes:["strong", "bitter"],hates:["sweet"],pref:'強く、苦く。甘いのは天使どもに飲ませておけ。',fav:{"wild": 2.5, "like": 2},lines:{ok:'クク…契約してもいいぞ',meh:'退屈だな',ng:'地獄に落とすぞ'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-bell"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#3a0a0a"/><g clip-path="url(#cp-bell)">
+<path d="M60 84 Q78 76 70 62" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M70 62 L65 58 L75 57Z" fill="#c0392b"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#111"/>
+<path d="M33 54 L40 66 L47 54Z" fill="#fff"/>
+<path d="M38 58 L42 58 L43 68 L40 72 L37 68Z" fill="#c0392b"/>
+<rect x="34" y="44" width="12" height="12" fill="#c0392b"/>
+<circle cx="40" cy="32" r="19" fill="#e0392b"/>
+<path d="M21 30 Q21 12 40 12 Q59 12 59 30 Q52 22 40 26 Q28 22 21 30Z" fill="#111"/>
+<path d="M26 20 L20 8 L32 16Z" fill="#111"/><path d="M54 20 L60 8 L48 16Z" fill="#111"/>
+<ellipse cx="33" cy="36" rx="3" ry="2.6" fill="#f3e25f"/><ellipse cx="47" cy="36" rx="3" ry="2.6" fill="#f3e25f"/>
+<ellipse cx="33" cy="36" rx="1" ry="2.2" fill="#111"/><ellipse cx="47" cy="36" rx="1" ry="2.2" fill="#111"/>
+<path d="M28 31 L36 33 M52 31 L44 33" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+<path d="M33 44 Q40 50 47 43" stroke="#5a0a0a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<path d="M44 44.5 L43 48.5 L41.5 45Z" fill="#fff"/>
+</g></svg>`},
+{id:'doc',name:'ドク',title:'考古学者',hours:[20, 24],likes:["bitter", "fresh"],hates:["sweet"],pref:'苦味とキレ。甘いのは研究の邪魔だ。',fav:{"like": 3},lines:{ok:'発見だ！記録しておこう',meh:'興味深いが、惜しい',ng:'仮説が崩れた'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-doc"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#8a7a5a"/><g clip-path="url(#cp-doc)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#b8a77a"/>
+<path d="M33 54 L40 64 L47 54Z" fill="#8a7a5a"/>
+<rect x="20" y="64" width="9" height="8" rx="1" fill="#9a8a60" stroke="#6a5a3a" stroke-width="1"/>
+<rect x="51" y="64" width="9" height="8" rx="1" fill="#9a8a60" stroke="#6a5a3a" stroke-width="1"/>
+<rect x="34" y="44" width="12" height="12" fill="#e2b48e"/>
+<circle cx="40" cy="32" r="19" fill="#f0c9a0"/>
+<path d="M24 38 Q26 58 40 60 Q54 58 56 38 Q50 46 40 46 Q30 46 24 38Z" fill="#d8d0c8"/>
+<circle cx="33" cy="35" r="5" fill="#dff0ff" fill-opacity=".5" stroke="#333" stroke-width="1.5"/>
+<circle cx="47" cy="35" r="5" fill="#dff0ff" fill-opacity=".5" stroke="#333" stroke-width="1.5"/>
+<path d="M38 35 L42 35" stroke="#333" stroke-width="1.5"/>
+<circle cx="33" cy="35" r="1.5" fill="#333"/><circle cx="47" cy="35" r="1.5" fill="#333"/>
+<path d="M36 44 Q40 46 44 44" stroke="#8a5a3a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+<path d="M20 26 Q22 8 40 8 Q58 8 60 26Z" fill="#e8dcc0"/>
+<ellipse cx="40" cy="26" rx="26" ry="5" fill="#d8ccb0"/>
+<path d="M22 22 Q40 19 58 22 L58 25 Q40 22 22 25Z" fill="#6a5a3a"/>
+</g></svg>`},
+{id:'kero',name:'ケロ',title:'カエルの王子',hours:[19, 23],likes:["fresh", "sour"],hates:["strong"],pref:'さっぱりしたのと酸っぱいの。強いのはケロッと倒れる。',fav:{"abstract": 2.5},lines:{ok:'ケロッ！',meh:'ケロ…',ng:'ゲコ（怒）'},svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-kero"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2a5a3a"/><g clip-path="url(#cp-kero)">
+<path d="M8 86 Q10 58 40 56 Q70 58 72 86Z" fill="#3a6ea5"/>
+<circle cx="24" cy="58" r="5" fill="#fff"/><circle cx="32" cy="55" r="5" fill="#fff"/><circle cx="40" cy="54" r="5" fill="#fff"/><circle cx="48" cy="55" r="5" fill="#fff"/><circle cx="56" cy="58" r="5" fill="#fff"/>
+<ellipse cx="40" cy="36" rx="22" ry="17" fill="#5ac27a"/>
+<circle cx="28" cy="22" r="8" fill="#5ac27a"/><circle cx="52" cy="22" r="8" fill="#5ac27a"/>
+<circle cx="28" cy="22" r="5" fill="#fff"/><circle cx="52" cy="22" r="5" fill="#fff"/>
+<circle cx="29" cy="23" r="2.5" fill="#222"/><circle cx="51" cy="23" r="2.5" fill="#222"/>
+<path d="M34 12 L36 4 L40 9 L44 4 L46 12Z" fill="#f3b95f"/>
+<path d="M24 40 Q40 52 56 40" stroke="#2f5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+<circle cx="24" cy="38" r="3" fill="#f4a3a3" opacity=".5"/><circle cx="56" cy="38" r="3" fill="#f4a3a3" opacity=".5"/>
+<circle cx="37" cy="33" r="1" fill="#2f5a3a"/><circle cx="43" cy="33" r="1" fill="#2f5a3a"/>
+</g></svg>`}
 ];
 const CHAR_BY_ID=Object.fromEntries(CHARS.map(c=>[c.id,c]));
 
@@ -425,69 +721,69 @@ const COCKTAILS=[
 
 /* ---------- ふわっとした注文 ---------- */
 const ABSTRACT=[
-  {text:'さっぱりしたのを一杯。', who:['tanaka','holmes','mei'], want:{fresh:2}, max:{sweet:1}, ok:'あー、生き返る〜', ng:'んー、さっぱりしないなあ'},
-  {text:'とにかく強いやつ、頼む。', who:['gen','vlad','holmes'], want:{strong:5}, soloOk:true, ok:'ゴホッ…これだよこれ', ng:'弱い、弱いよ'},
-  {text:'甘くてかわいいのがいい！', who:['rina','mei','mira'], want:{sweet:3}, max:{strong:3,bitter:0}, ok:'かわいい〜！写真撮っていい？', ng:'思ってたのと違う…'},
-  {text:'明日早いから、酔わないやつで。', who:['holmes','robo','mei','tanaka'], max:{strong:0}, ok:'助かる、ありがとう', ng:'ちょっと、酒入ってるじゃん！'},
-  {text:'失恋したんだ…察して。', who:['tanaka','mei','mira'], want:{strong:3,bitter:1}, soloOk:true, ok:'…ありがとう。わかってくれるんだね', ng:'…わかってないな'},
-  {text:'夏っぽいの！', who:['rina','nyanta','pi'], want:{fresh:2}, any:{fruity:1,sour:1}, ok:'海が見える…', ng:'夏、どこ？'},
-  {text:'大人の味ってやつ、ある？', who:['holmes','gen','vlad'], want:{strong:3,bitter:1}, max:{sweet:1}, ok:'ふっ、渋いね', ng:'子供っぽいなあ'},
-  {text:'フルーツたっぷりで。', who:['pi','nyanta','rina'], want:{fruity:3}, ok:'ビタミン補給！', ng:'果物、どこ？'},
-  {text:'スッキリ酸っぱいの。', who:['nyanta','mira','robo'], want:{sour:2,fresh:1}, ok:'キュッとくる！', ng:'酸味が足りないなあ'},
-  {text:'軽めのやつ。ジュースじゃなくてね。', who:['tanaka','mei','mira'], want:{strong:3}, max:{strong:3}, ok:'ちょうどいい', ng:'重いって'},
+  {text:'さっぱりしたのを一杯。', who:['tanaka','holmes','mei','masa','takumi','yukio','kero','doc'], want:{fresh:2}, max:{sweet:1}, ok:'あー、生き返る〜', ng:'んー、さっぱりしないなあ'},
+  {text:'とにかく強いやつ、頼む。', who:['gen','vlad','holmes','oyuki','bones','taihozan','bell','sayuri'], want:{strong:5}, soloOk:true, ok:'ゴホッ…これだよこれ', ng:'弱い、弱いよ'},
+  {text:'甘くてかわいいのがいい！', who:['rina','mei','mira','twins','el','regina','hikari'], want:{sweet:3}, max:{strong:3,bitter:0}, ok:'かわいい〜！写真撮っていい？', ng:'思ってたのと違う…'},
+  {text:'明日早いから、酔わないやつで。', who:['holmes','robo','mei','tanaka','takumi','sora','el','kage'], max:{strong:0}, ok:'助かる、ありがとう', ng:'ちょっと、酒入ってるじゃん！'},
+  {text:'失恋したんだ…察して。', who:['tanaka','mei','mira','hikari','oyuki','kero'], want:{strong:3,bitter:1}, soloOk:true, ok:'…ありがとう。わかってくれるんだね', ng:'…わかってないな'},
+  {text:'夏っぽいの！', who:['rina','nyanta','pi','yukio','sora','kero','twins'], want:{fresh:2}, any:{fruity:1,sour:1}, ok:'海が見える…', ng:'夏、どこ？'},
+  {text:'大人の味ってやつ、ある？', who:['holmes','gen','vlad','doc','john','masa','chief'], want:{strong:3,bitter:1}, max:{sweet:1}, ok:'ふっ、渋いね', ng:'子供っぽいなあ'},
+  {text:'フルーツたっぷりで。', who:['pi','nyanta','rina','ramses','regina','el'], want:{fruity:3}, ok:'ビタミン補給！', ng:'果物、どこ？'},
+  {text:'スッキリ酸っぱいの。', who:['nyanta','mira','robo','masa','kero','yukio','doc'], want:{sour:2,fresh:1}, ok:'キュッとくる！', ng:'酸味が足りないなあ'},
+  {text:'軽めのやつ。ジュースじゃなくてね。', who:['tanaka','mei','mira','hikari','takumi','sora'], want:{strong:3}, max:{strong:3}, ok:'ちょうどいい', ng:'重いって'},
 ];
 
 /* ---------- 無茶ぶり ---------- */
 const WILD=[
-  {text:'ねえ、歌を歌ってくれない？', who:['rina','gen','pi'], choices:[
+  {text:'ねえ、歌を歌ってくれない？', who:['rina','gen','pi','sayuri','twins','regina'], choices:[
     {label:'♪ 熱唱する', tip:300, line:'上手い！…いや下手だけど最高！', busy:'熱唱中…'},
     {label:'ハミングでごまかす', tip:100, line:'まあ…雰囲気は出てるね', busy:'ハミング中…'},
     {label:'シェイカーをリズミカルに振る', tip:200, line:'なにそれ、かっこいい', busy:'シャカシャカ…'},
     {label:'丁重にお断りする', tip:0, line:'つれないなあ'},
   ]},
-  {text:'人生相談、乗ってくれる？', who:['tanaka','mei','vlad'], choices:[
+  {text:'人生相談、乗ってくれる？', who:['tanaka','mei','vlad','hikari','oyuki','kero','pochi'], choices:[
     {label:'黙って最後まで聞く', tip:300, line:'ありがとう。少し楽になったよ', busy:'傾聴中…'},
     {label:'自分の失敗談で返す', tip:200, line:'バーテンダーも大変なんだね…ふふ', busy:'昔話中…'},
     {label:'とりあえず氷を足す', tip:100, line:'…まあ、頭は冷えたよ'},
     {label:'占い師を紹介する', tip:50, line:'そういうことじゃないんだよなあ'},
   ]},
-  {text:'私の名前、当ててみて。', who:['gen','holmes','tanaka'], choices:[
+  {text:'私の名前、当ててみて。', who:['gen','holmes','tanaka','doc','chief','kage'], choices:[
     {label:'「田中さん！」', guess:'田中', outcomes:[{p:.3,tip:500,line:'えっ、なんで知ってるの！？'},{p:.7,tip:100,line:'違うけど、ノリはいいね'}]},
     {label:'「…常連さんの顔ですね」', tip:200, line:'うまく逃げたな'},
     {label:'名札を探す', tip:50, line:'名札なんて付けてないよ'},
     {label:'「マスターと呼ばせてください」', tip:150, line:'私が客なんだけど'},
   ]},
-  {text:'手品、見せてよ。', who:['mei','pi','nyanta'], choices:[
+  {text:'手品、見せてよ。', who:['mei','pi','nyanta','twins','pochi','yukio','el'], choices:[
     {label:'コインを消す（袖に隠す）', tip:200, line:'お、王道', busy:'手品中…'},
     {label:'ライムを消す（食べる）', tip:300, line:'ははは、それ手品じゃない', busy:'もぐもぐ…'},
     {label:'自分が消える（裏に引っ込む）', tip:50, line:'おーい、戻ってきて'},
     {label:'グラスを消す（片付ける）', tip:100, line:'それはただの片付け'},
   ]},
-  {text:'ジャグリングして！', who:['rina','robo','pi'], choices:[
+  {text:'ジャグリングして！', who:['rina','robo','pi','takumi','bones','taihozan'], choices:[
     {label:'ボトルで挑戦する', outcomes:[{p:.5,tip:500,line:'すげえ！！'},{p:.5,tip:-200,line:'ガシャーン…あ、弁償ね'}], busy:'ジャグリング中…'},
     {label:'ライムで挑戦する', tip:200, line:'安全策だね。でも上手い', busy:'ジャグリング中…'},
     {label:'氷でジャグリング', tip:150, line:'つ、冷たそう', busy:'ジャグリング中…'},
     {label:'やめておく', tip:0, line:'ちぇっ'},
   ]},
-  {text:'元気が出る一言、ちょうだい。', who:['tanaka','mei','mira'], choices:[
+  {text:'元気が出る一言、ちょうだい。', who:['tanaka','mei','mira','hikari','oyuki','kero'], choices:[
     {label:'「明日は明日の風が吹く」', tip:200, line:'…そうだね'},
     {label:'「乾杯！」', tip:300, line:'それでいい。それがいい'},
     {label:'「頑張れ」', tip:100, line:'頑張ってるんだけどなあ'},
     {label:'無言で肩を叩く', tip:250, line:'…うん'},
   ]},
-  {text:'犬の真似して。', who:['nyanta','vlad','robo'], choices:[
+  {text:'犬の真似して。', who:['nyanta','vlad','robo','john','pochi','bell'], choices:[
     {label:'「ワン！」', tip:200, line:'かわいい'},
     {label:'お座りする', tip:300, line:'めっちゃ従順', busy:'お座り中…'},
     {label:'「にゃー」', tip:150, line:'それ猫'},
     {label:'無視して氷を砕く', tip:50, line:'冷たいなあ'},
   ]},
-  {text:'SNSに載せたいから、決めポーズして！', who:['rina','mira','pi'], choices:[
+  {text:'SNSに載せたいから、決めポーズして！', who:['rina','mira','pi','regina','sayuri','bones','taihozan'], choices:[
     {label:'キメ顔', tip:200, line:'いいね稼げそう', busy:'撮影中…'},
     {label:'グラスを掲げる', tip:300, line:'映える！', busy:'撮影中…'},
     {label:'シェイカーを高く掲げる', tip:250, line:'プロっぽい！', busy:'撮影中…'},
     {label:'顔を隠す', tip:50, line:'シャイだなあ'},
   ]},
-  {text:'一発ギャグやって。', who:['tanaka','gen','holmes'], choices:[
+  {text:'一発ギャグやって。', who:['tanaka','gen','holmes','masa','doc','chief','bell'], choices:[
     {label:'シェイカーを振りながら「シェケナベイベー」', tip:300, line:'古い！でも笑った', busy:'シェケナ中…'},
     {label:'「氷は…懲りました」', tip:150, line:'うーん'},
     {label:'真顔で見つめ返す', tip:200, line:'それが一番おもしろい', busy:'凝視中…'},
@@ -557,16 +853,29 @@ const namedOrder=ch=>{
   const c=rnd(COCKTAILS);
   const o={kind:'named',cocktail:c,text:`${c.name}、ひとつ。`,label:'カクテル',summary:c.name,pay:450};
   const spirit=c.ings.find(id=>BY_ID[id].tags.strong);
-  if(ch&&spirit&&c.ings.length<=3&&Math.random()<0.35){
-    if(ch.likes.includes('strong')){o.mod='strong';o.text=`${c.name}、濃いめで。`;o.summary=`${c.name}（濃いめ）`;o.pay=520}
-    else if(ch.hates.includes('strong')&&Math.random()<0.5){o.mod='weak';o.text=`${c.name}。明日早いから、薄めで。`;o.summary=`${c.name}（薄め）`;o.pay=480}
-    else if(ch.hates.includes('strong')){
+  if(ch&&spirit&&c.ings.length<=3){
+    let mod=null;
+    if(ch.mod&&Math.random()<0.5) mod=ch.mod;
+    else if(Math.random()<0.3){ if(ch.likes.includes('strong')) mod='strong'; else if(ch.hates.includes('strong')) mod=Math.random()<0.5?'weak':'na'; }
+    if(mod==='strong'){o.mod='strong';o.text=`${c.name}、濃いめで。`;o.summary=`${c.name}（濃いめ）`;o.pay=520}
+    else if(mod==='weak'){o.mod='weak';o.text=`${c.name}。明日早いから、薄めで。`;o.summary=`${c.name}（薄め）`;o.pay=480}
+    else if(mod==='na'){
       o.mod='na';o.na=mocktail(c);const added=o.na.find(id=>!c.ings.includes(id));
       o.text=`${c.name}のノンアルで。${BY_ID[spirit].name}抜き${added?'で、'+BY_ID[added].name+'を足して':'で'}ね。`;o.summary=`${c.name}（ノンアル）`;o.pay=430;
     }
   }
   return o;
 };
+const KIND_W={named:30,abstract:12,omakase:8,mood:12,like:10,same:8,bulk:5,wild:15};
+function pickKind(ch,ns){
+  const w={...KIND_W};
+  if(ch.fav) for(const k in ch.fav) if(w[k]!=null) w[k]*=ch.fav[k];
+  if(!ns.lastDrink||ns.lastDrink.name===ch.name) w.same=0;
+  if(!ABSTRACT.some(a=>a.who.includes(ch.id))) w.abstract=0;
+  const total=Object.values(w).reduce((a,b)=>a+b,0); let r=Math.random()*total;
+  for(const k in w){r-=w[k];if(r<0)return k}
+  return 'named';
+}
 function makeOrder(ch,m,ns){
   const hasMem=!!(m.usual||(m.last&&m.last.length));
   if(hasMem&&ns.mem<3&&Math.random()<0.3){
@@ -580,28 +889,30 @@ function makeOrder(ch,m,ns){
     const text=m.aff<=1?`前回と同じの。えっと、${BY_ID[key].name}が入ってたやつ。`:'また来たよ。前回と同じの、もう一杯。';
     return {kind:'repeat',glass:last,text,label:'前回と同じ',summary:'前回と同じ',pay:480};
   }
-  const r=Math.random()*100;
-  const absC=ABSTRACT.filter(a=>a.who.includes(ch.id)), wildC=WILD.filter(w=>w.who.includes(ch.id));
-  if(r<30) return namedOrder(ch);
-  if(r<42&&absC.length){const d=rnd(absC);return {kind:'abstract',def:d,text:d.text,label:'ふわっとした注文',summary:'ふわっと',pay:450}}
-  if(r<50) return {kind:'omakase',text:'おまかせで。',label:'おまかせ',summary:'おまかせ',pay:450};
-  if(r<62){
-    const keys=Object.keys(MOODS).filter(k=>!(k==='hyped'&&ch.hates.includes('strong'))&&!(k==='down'&&ch.hates.includes('strong')));
-    const mk=rnd(keys), md=MOODS[mk];
+  const k=pickKind(ch,ns);
+  if(k==='abstract'){const d=rnd(ABSTRACT.filter(a=>a.who.includes(ch.id)));return {kind:'abstract',def:d,text:d.text,label:'ふわっとした注文',summary:'ふわっと',pay:450}}
+  if(k==='omakase') return {kind:'omakase',text:'おまかせで。',label:'おまかせ',summary:'おまかせ',pay:450};
+  if(k==='mood'){
+    const keys=Object.keys(MOODS).filter(x=>!((x==='hyped'||x==='down')&&ch.hates.includes('strong')));
+    const mk=(ch.mood&&keys.includes(ch.mood)&&Math.random()<0.6)?ch.mood:rnd(keys), md=MOODS[mk];
     return {kind:'mood',moodKey:mk,mood:md,text:mk==='rush'?'なんでもいい、早く！':'今日はなんか、こう…ね？',label:'今日の気分',summary:`${md.icon} ${md.name}`,pay:Math.round(450*(md.pay||1))};
   }
-  if(r<72){const c=rnd(COCKTAILS.filter(x=>x.ings.length>=2));return {kind:'like',cocktail:c,text:`${c.name}っぽいの、なんか作って。`,label:'アレンジ',summary:`${c.name}っぽい`,pay:500}}
-  if(r<80&&ns.lastDrink){const ld=ns.lastDrink;if(ld.name!==ch.name)return {kind:'same',glass:ld.ids,text:`さっき${ld.name}が飲んでたやつ、同じのを。`,label:'同じもの',summary:`${ld.name}と同じ`,pay:470}}
-  if(r<85){const c=rnd(COCKTAILS.filter(x=>x.ings.length<=3));return {kind:'named',cocktail:c,count:3,served:0,grades:[],money:0,text:`${c.name}を3杯！みんなで乾杯するんだ。`,label:'乾杯',summary:`${c.name} ×3`,pay:450}}
-  const w=rnd(wildC.length?wildC:WILD);
-  return {kind:'wild',def:w,text:w.text,label:'無茶ぶり',summary:'無茶ぶり'};
+  if(k==='like'){const c=rnd(COCKTAILS.filter(x=>x.ings.length>=2));return {kind:'like',cocktail:c,text:`${c.name}っぽいの、なんか作って。`,label:'アレンジ',summary:`${c.name}っぽい`,pay:500}}
+  if(k==='same'){const ld=ns.lastDrink;return {kind:'same',glass:ld.ids,text:`さっき${ld.name}が飲んでたやつ、同じのを。`,label:'同じもの',summary:`${ld.name}と同じ`,pay:470}}
+  if(k==='bulk'){
+    const n=ch.bulkCount||3, c=rnd(COCKTAILS.filter(x=>x.ings.length<=3));
+    const text=n===2?`${c.name}を2つ。「同じの！」「同じの！」`:`${c.name}を${n}杯！みんなで乾杯するんだ。`;
+    return {kind:'named',cocktail:c,count:n,served:0,grades:[],money:0,text,label:'乾杯',summary:`${c.name} ×${n}`,pay:450};
+  }
+  if(k==='wild'){const wildC=WILD.filter(w=>w.who.includes(ch.id));const w=rnd(wildC.length?wildC:WILD);return {kind:'wild',def:w,text:w.text,label:'無茶ぶり',summary:'無茶ぶり'}}
+  return namedOrder(ch);
 }
 
 
 /* ---------- 夜の進行 ---------- */
 function pickArrival(){
   const h=N.clock;
-  const all=CHARS.filter(c=>!N.absent.includes(c.id)&&(N.visits[c.id]||0)<2);
+  const all=CHARS.filter(c=>G.roster.includes(c.id)&&!N.absent.includes(c.id)&&(N.visits[c.id]||0)<(2+(G.mem[c.id].aff>=2?1:0)));
   if(!all.length) return null;
   const inWin=c=>h>=c.hours[0]&&h<c.hours[1];
   const cands=all.filter(inWin).length?all.filter(inWin):all;
@@ -622,8 +933,26 @@ function renderClock(){
   $('clockNote').textContent=N.clock>=CLOSE?'閉店時間':N.clock>=LAST?'ラストオーダー':N.clock>=24?'深夜':N.clock>=21?'ピークタイム':'開店';
 }
 
+function ensureRoster(){
+  const ids=CHARS.map(c=>c.id);
+  const inWin=(id,h)=>{const c=CHAR_BY_ID[id];return h>=c.hours[0]&&h<c.hours[1]};
+  if(!G.roster||!G.roster.length){
+    const need=Math.min(ids.length,8+3*(G.night-1)); let best=null;
+    for(let t=0;t<40;t++){
+      const pick=shuffle(ids).slice(0,need);
+      best=pick;
+      if([19,20,21,22,23,24,25].every(h=>pick.filter(id=>inWin(id,h)).length>=2)) break;
+    }
+    G.roster=best; G.rosterNight=G.night; N_new=best.slice();
+  }else if(G.rosterNight!==G.night){
+    const rest=shuffle(ids.filter(id=>!G.roster.includes(id))).slice(0,3);
+    G.roster=G.roster.concat(rest); G.rosterNight=G.night; N_new=rest;
+  }else N_new=[];
+}
+let N_new=[];
 function startNight(){
   D=DIFF[G.diff]; E=ECON[G.econ];
+  ensureRoster();
   const absent=CHARS.filter(c=>G.mem[c.id].skip).map(c=>c.id);
   CHARS.forEach(c=>{G.mem[c.id].skip=false});
   N={seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,score:0,combo:0,maxCombo:0,perfect:0,customers:0,visits:{},mem:0,wild:0,lastDrink:null,results:[],notes:[],busy:null,clock:OPEN,sinceArrival:99,nextDelay:0,exhausted:false,ending:false,timer:null,lastActive:null,absent};
@@ -882,7 +1211,8 @@ function renderActive(){
   const cust=activeCust(), b=$('bubble');
   if(!cust){
     $('avatarArt').innerHTML='';$('cname').textContent='';$('ctitle').textContent='';$('caff').textContent='';$('face').textContent='';
-    b.innerHTML=`<div class="muted">${(N.clock>=LAST||N.exhausted)?'今夜はこれで最後…':'次のお客さんを待っています…'}</div>`; N.lastActive=null; return;
+    const nn=N_new.length&&N.customers===0?`<div class="muted" style="margin-top:6px;font-size:13px">今夜の新顔: ${N_new.map(id=>CHAR_BY_ID[id].name).join('、')}</div>`:'';
+    b.innerHTML=`<div class="muted">${(N.clock>=LAST||N.exhausted)?'今夜はこれで最後…':'次のお客さんを待っています…'}</div>${nn}`; N.lastActive=null; return;
   }
   const ch=cust.char, m=G.mem[ch.id];
   if(N.lastActive!==cust){$('avatarArt').innerHTML=ch.svg;const av=$('avatar');av.classList.remove('enter');void av.offsetWidth;av.classList.add('enter');N.lastActive=cust}
