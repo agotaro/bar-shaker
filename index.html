@@ -62,6 +62,7 @@ header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
 .glass-items{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;margin-bottom:10px}
 .chip{background:rgba(0,0,0,.25);border:1px solid #6a5048;border-radius:999px;padding:5px 10px;font-size:13px;display:flex;gap:6px;align-items:center}
 .chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.chip .x{opacity:.55;margin-left:4px}
 .glass-items .empty{color:var(--muted);font-size:13px;align-self:center}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions button{padding:10px 16px;border-radius:12px;font-weight:700;background:rgba(0,0,0,.25);border:1px solid #6a5048}
@@ -412,7 +413,7 @@ const COCKTAILS=[
 /* ---------- ふわっとした注文 ---------- */
 const ABSTRACT=[
   {text:'さっぱりしたのを一杯。', who:['tanaka','holmes','mei'], want:{fresh:2}, max:{sweet:1}, ok:'あー、生き返る〜', ng:'んー、さっぱりしないなあ'},
-  {text:'とにかく強いやつ、頼む。', who:['gen','vlad','holmes'], want:{strong:5}, ok:'ゴホッ…これだよこれ', ng:'弱い、弱いよ'},
+  {text:'とにかく強いやつ、頼む。', who:['gen','vlad','holmes'], want:{strong:5}, soloOk:true, ok:'ゴホッ…これだよこれ', ng:'弱い、弱いよ'},
   {text:'甘くてかわいいのがいい！', who:['rina','mei','mira'], want:{sweet:3}, max:{strong:3,bitter:0}, ok:'かわいい〜！写真撮っていい？', ng:'思ってたのと違う…'},
   {text:'明日早いから、酔わないやつで。', who:['holmes','robo','mei','tanaka'], max:{strong:0}, ok:'助かる、ありがとう', ng:'ちょっと、酒入ってるじゃん！'},
   {text:'失恋したんだ…察して。', who:['tanaka','mei','mira'], want:{strong:3,bitter:1}, soloOk:true, ok:'…ありがとう。わかってくれるんだね', ng:'…わかってないな'},
@@ -493,7 +494,7 @@ const ECON={
   normal:{name:'普通',desc:'毎晩の家賃あり。払えなければ閉店。',rent:1,price:1,rank:1},
   hard:{name:'シビア',desc:'家賃が高く、仕入れも高い。赤字は即閉店。',rent:1.8,price:1.25,rank:0.8},
 };
-const PATIENCE={named:30,abstract:25,omakase:25,wild:20,repeat:30,usual:30,variant:30,substitute:25};
+const PATIENCE={named:30,abstract:25,omakase:25,wild:20,repeat:30,usual:30,substitute:25};
 const BADGE={perfect:'😆',partial:'😐',fail:'😠',left:'💨'};
 const SAVE_KEY='barshaker.v2';
 
@@ -504,6 +505,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const yen=n=>'¥'+n.toLocaleString();
 function profile(glass){const p={};glass.forEach(i=>{for(const k in i.tags)p[k]=(p[k]||0)+i.tags[k]});return p}
 function matchCocktail(glass){const ids=glass.map(i=>i.id).sort().join(',');return COCKTAILS.find(c=>c.ings.slice().sort().join(',')===ids)}
+function countsOf(ids){const c={};ids.forEach(id=>c[id]=(c[id]||0)+1);return c}
+function msJaccard(a,b){const ca=countsOf(a),cb=countsOf(b);let inter=0,union=0;new Set([...a,...b]).forEach(k=>{inter+=Math.min(ca[k]||0,cb[k]||0);union+=Math.max(ca[k]||0,cb[k]||0)});return union?inter/union:0}
+function balance(glass){const total=glass.length,sp=glass.filter(i=>i.tags.strong).length,p=profile(glass);return {total,spirits:sp,tooStrong:sp>=3||(total>=2&&sp/total>0.5),tooSweet:(p.sweet||0)>=5}}
+function dominantWord(ids){const p=profile(ids.map(id=>BY_ID[id]));let best=null;for(const k in p){if(!best||p[k]>p[best])best=k}return best?TAGWORD[best]:''}
 function bottleHtml(ing){const st=G?G.stock[ing.id]:ing.cap;const lv=Math.round(100*st/ing.cap);return `<span class="bottle" style="--c:${ing.color}"><i class="neck"></i><i class="body"><i class="liq" style="height:${lv}%"></i></i></span>`}
 
 /* ---------- 状態 ---------- */
@@ -514,7 +519,7 @@ const priceOf=i=>Math.round(i.price*E.price/10)*10;
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
 function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;if(g&&!ECON[g.econ])g.econ='normal';return g&&DIFF[g.diff]?g:null}catch(e){return null}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
-function initMem(){CHARS.forEach(c=>{if(!G.mem[c.id])G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false}})}
+function initMem(){CHARS.forEach(c=>{const m=G.mem[c.id]||(G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false});if(m.usual===undefined)m.usual=null})}
 
 function newGame(diff,econ){
   G={diff,econ:econ||'normal',night:1,money:1000,stock:{},mem:{},learned:{},history:[]};
@@ -524,18 +529,32 @@ function newGame(diff,econ){
 function continueGame(s){G=s;initMem();startNight()}
 
 /* ---------- 注文の生成 ---------- */
-const namedOrder=()=>{const c=rnd(COCKTAILS);return {kind:'named',cocktail:c,text:`${c.name}、ひとつ。`,label:'カクテル',summary:c.name,pay:450}};
-function makeOrder(ch,m){
-  if(m.last&&m.last.length&&Math.random()<0.6){
-    const r=Math.random();
-    if(m.aff>=2&&r<0.45) return {kind:'usual',glass:m.last,text:'いつもの。',label:'常連',summary:'いつもの',pay:520};
-    if(r<0.75||m.last.length>=MAX) return {kind:'repeat',glass:m.last,text:'また来たよ。前回と同じの、もう一杯。',label:'前回と同じ',summary:'前回と同じ',pay:480};
-    const [tag,word]=rnd([['strong','強めで'],['sweet','甘めで'],['fresh','さっぱりめで']]);
-    return {kind:'variant',glass:m.last,tag,text:`前回のやつを、もう少し${word}。`,label:'前回＋α',summary:'前回＋'+word.replace('で',''),pay:520};
+const namedOrder=ch=>{
+  const c=rnd(COCKTAILS);
+  const o={kind:'named',cocktail:c,text:`${c.name}、ひとつ。`,label:'カクテル',summary:c.name,pay:450};
+  const spirit=c.ings.find(id=>BY_ID[id].tags.strong);
+  if(ch&&spirit&&c.ings.length<=3&&Math.random()<0.3){
+    if(ch.likes.includes('strong')){o.mod='strong';o.text=`${c.name}、濃いめで。`;o.summary=`${c.name}（濃いめ）`;o.pay=520}
+    else if(ch.hates.includes('strong')){o.mod='weak';o.text=`${c.name}。明日早いから、薄めで。`;o.summary=`${c.name}（薄め）`;o.pay=480}
+  }
+  return o;
+};
+function makeOrder(ch,m,ns){
+  const hasMem=!!(m.usual||(m.last&&m.last.length));
+  if(hasMem&&ns.mem<3&&Math.random()<0.3){
+    ns.mem++;
+    if(m.usual&&m.aff>=2){
+      const text=m.aff>=3?'いつもの。':`いつもの${dominantWord(m.usual)}やつ。`;
+      return {kind:'usual',glass:m.usual,text,label:'常連',summary:'いつもの',pay:520};
+    }
+    const last=m.last||m.usual;
+    const key=last.find(id=>BY_ID[id].tags.strong)||last[0];
+    const text=m.aff<=1?`前回と同じの。えっと、${BY_ID[key].name}が入ってたやつ。`:'また来たよ。前回と同じの、もう一杯。';
+    return {kind:'repeat',glass:last,text,label:'前回と同じ',summary:'前回と同じ',pay:480};
   }
   const r=Math.random();
   const absC=ABSTRACT.filter(a=>a.who.includes(ch.id)), wildC=WILD.filter(w=>w.who.includes(ch.id));
-  if(r<0.45) return namedOrder();
+  if(r<0.45) return namedOrder(ch);
   if(r<0.65&&absC.length){const d=rnd(absC);return {kind:'abstract',def:d,text:d.text,label:'ふわっとした注文',summary:'ふわっと',pay:450}}
   if(r<0.78) return {kind:'omakase',text:'おまかせで。',label:'おまかせ',summary:'おまかせ',pay:450};
   const w=rnd(wildC.length?wildC:WILD);
@@ -549,10 +568,10 @@ function buildNight(){
   CHARS.forEach(c=>{G.mem[c.id].skip=false});
   pool=pool.map(c=>({c,w:G.mem[c.id].aff+Math.random()*3})).sort((a,b)=>b.w-a.w).map(x=>x.c);
   const cast=pool.slice(0,count);
-  let wild=0;
+  let wild=0; const ns={mem:0};
   const queue=shuffle(cast).map(ch=>{
-    let o=makeOrder(ch,G.mem[ch.id]);
-    if(o.kind==='wild'){wild++;if(wild>3)o=namedOrder()}
+    let o=makeOrder(ch,G.mem[ch.id],ns);
+    if(o.kind==='wild'){wild++;if(wild>3)o=namedOrder(ch)}
     return {char:ch,order:o};
   });
   if(G.night===1){const i=queue.findIndex(q=>q.order.kind==='named');if(i>0)[queue[0],queue[i]]=[queue[i],queue[0]]}
@@ -616,12 +635,13 @@ function tick(){
 /* ---------- 操作 ---------- */
 function addIng(ing){
   if(!canMix()) return;
-  if(G.stock[ing.id]<=0){toast(`${ing.name}を切らしてる！`);return}
-  if(N.glass.find(g=>g.id===ing.id)){toast(`${ing.name}はもう入ってるよ`);return}
+  const have=N.glass.filter(g=>g.id===ing.id).length;
+  if(G.stock[ing.id]<=have){toast(have?`${ing.name}はもう残りがない`:`${ing.name}を切らしてる！`);return}
+  if(have>=2){toast(`${ing.name}はそれ以上入らない`);return}
   if(N.glass.length>=MAX){toast('グラスがいっぱい！');shakeGlass();return}
   N.glass.push(ing); renderGlass();
 }
-function removeIng(i){if(!canMix())return;N.glass.splice(i,1);renderGlass()}
+function removeIng(id){if(!canMix())return;const i=N.glass.map(g=>g.id).lastIndexOf(id);if(i>=0)N.glass.splice(i,1);renderGlass()}
 
 function serve(){
   const cust=activeCust(); if(!canMix()) return;
@@ -633,7 +653,7 @@ function serve(){
   finishCust(cust,res,ids);
 }
 
-function requiredIds(o){return o.kind==='named'?o.cocktail.ings:(o.kind==='repeat'||o.kind==='usual'||o.kind==='variant')?o.glass:[]}
+function requiredIds(o){return o.kind==='named'?o.cocktail.ings:(o.kind==='repeat'||o.kind==='usual')?o.glass:[]}
 function substitute(){
   const cust=activeCust(); if(!cust||cust.done||N.busy) return;
   const ch=cust.char, m=G.mem[ch.id];
@@ -668,20 +688,29 @@ function evaluate(cust){
   const speed=Math.max(0,cust.patience/cust.patienceMax);
   const affMult=1+0.08*(G.mem[ch.id].aff||0);
   const pay=g=>g==='perfect'?Math.round((o.pay+150*speed)*affMult):g==='partial'?Math.round(o.pay*0.4):0;
-  const got=glass.map(i=>i.id);
-  const jac=target=>{const missing=target.filter(x=>!got.includes(x)),extra=got.filter(x=>!target.includes(x));return {j:(target.length-missing.length)/(target.length+extra.length),missing,extra}};
-  const hintOf=r=>r.missing.length?`${BY_ID[r.missing[0]].name}が足りない気がする`:r.extra.length?`${BY_ID[r.extra[0]].name}は余計かも`:'';
-  let grade,line;
-  if(o.kind==='named'||o.kind==='repeat'||o.kind==='usual'){
-    const r=jac(o.kind==='named'?o.cocktail.ings:o.glass);
-    grade=r.j===1?'perfect':r.j>=0.5?'partial':'fail';
-    if(grade==='perfect') line=o.kind==='usual'?`${L.ok} さすが、覚えてるね`:L.ok;
-    else line=`${grade==='partial'?L.meh:L.ng}（${o.kind==='named'?hintOf(r):'前のと違う…'}）`;
-  }else if(o.kind==='variant'){
-    const r=jac(o.glass), pl=profile(o.glass.map(id=>BY_ID[id])), pn=profile(glass);
-    const same=r.j>=0.5, more=(pn[o.tag]||0)>(pl[o.tag]||0);
-    grade=same&&more?'perfect':(same||more)?'partial':'fail';
-    line=grade==='perfect'?L.ok:!same?`${L.ng}（前のと全然違う）`:`${L.meh}（もっと${TAGWORD[o.tag]}のを頼んだのに）`;
+  const got=glass.map(i=>i.id), b=balance(glass), distinct=new Set(got).size;
+  let grade,line,bonus=0;
+  if(o.kind==='named'){
+    const target=o.cocktail.ings, c=countsOf(got);
+    const missing=target.filter(x=>!c[x]), extra=Object.keys(c).filter(x=>!target.includes(x));
+    if(missing.length||extra.length){
+      const j=(target.length-missing.length)/(target.length+extra.length);
+      grade=j>=0.5?'partial':'fail';
+      line=`${grade==='partial'?L.meh:L.ng}（${missing.length?`${BY_ID[missing[0]].name}が足りない気がする`:`${BY_ID[extra[0]].name}は余計かも`}）`;
+    }else{
+      const spirit=target.find(id=>BY_ID[id].tags.strong);
+      const dblS=!!spirit&&c[spirit]>=2, dblM=target.some(id=>id!==spirit&&c[id]>=2);
+      const v=dblS&&dblM?'both':dblS?'strong':dblM?'weak':null, mod=o.mod||null;
+      if(v===mod){grade='perfect';line=mod?`${L.ok} 注文どおりだ`:L.ok}
+      else if(!mod&&v==='strong'&&ch.likes.includes('strong')){grade='perfect';bonus=60;line=`${L.ok} 濃いめにしてくれたんだ。分かってるね`}
+      else if(!mod&&v==='weak'&&ch.hates.includes('strong')){grade='perfect';bonus=60;line=`${L.ok} 薄めにしてくれたんだ。助かる`}
+      else if(!mod){grade='partial';line=`${L.meh}（${v==='strong'?'濃すぎる':v==='weak'?'薄い…':'量が多すぎ'}）`}
+      else{grade='partial';line=`${L.meh}（${mod==='strong'?'濃いめって言ったのに':'薄めって言ったのに'}）`}
+    }
+  }else if(o.kind==='repeat'||o.kind==='usual'){
+    const j=msJaccard(got,o.glass);
+    grade=j===1?'perfect':j>=0.5?'partial':'fail';
+    line=grade==='perfect'?(o.kind==='usual'?`${L.ok} さすが、覚えてるね`:L.ok):`${grade==='partial'?L.meh:L.ng}（${j>=0.5?'前のと少し違う…':'前のと違う…'}）`;
   }else if(o.kind==='abstract'){
     const d=o.def, p=profile(glass), conds=[];
     for(const k in (d.want||{})) conds.push((p[k]||0)>=d.want[k]);
@@ -690,20 +719,22 @@ function evaluate(cust){
     const score=conds.length?conds.filter(Boolean).length/conds.length:1;
     grade=score===1?'perfect':score>=0.5?'partial':'fail';
     line=grade==='perfect'?d.ok:d.ng;
-    if(glass.length<2&&!d.soloOk&&grade==='perfect'){grade='partial';line=`…それ、${glass[0].name}そのままでは？`}
-    if(grade==='perfect'&&(p.strong||0)>=7&&!(d.want&&d.want.strong>=5)){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    if(distinct<2&&!d.soloOk&&grade==='perfect'){grade='partial';line=`…それ、${glass[0].name}そのままでは？`}
+    if(grade==='perfect'&&b.tooStrong&&!(d.want&&d.want.strong>=5)){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    if(grade==='perfect'&&b.tooSweet&&!(d.want&&d.want.sweet>=3)){grade='partial';line='…甘すぎ。歯が溶けそう'}
   }else{ // omakase / substitute
     const p=profile(glass), conds=[];
     ch.likes.forEach(t=>conds.push((p[t]||0)>=2));
     ch.hates.forEach(t=>conds.push((p[t]||0)===0));
     const score=conds.filter(Boolean).length/conds.length;
     grade=score===1?'perfect':score>=0.5?'partial':'fail';
-    if(glass.length<2&&grade==='perfect') grade='partial';
-    if(grade==='perfect'&&(p.strong||0)>=7&&!ch.likes.includes('strong')){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    if(distinct<2&&grade==='perfect') grade='partial';
+    if(grade==='perfect'&&b.tooStrong&&!ch.likes.includes('strong')){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    if(grade==='perfect'&&b.tooSweet&&!ch.likes.includes('sweet')){grade='partial';line='…甘すぎ。歯が溶けそう'}
     const c=matchCocktail(glass);
     if(!line) line=grade==='perfect'?(c?`お、${c.name}か。${L.ok}`:L.ok):`${grade==='partial'?L.meh:L.ng}（${prefHint(ch,p)||'なんか違う'}）`;
   }
-  return {grade,money:pay(grade),line};
+  return {grade,money:pay(grade)+bonus,line};
 }
 
 /* ---------- 客の退場・記憶 ---------- */
@@ -712,6 +743,7 @@ function remember(cust,grade,ids){
   if(grade==='perfect'){const b=m.aff;m.aff=Math.min(5,m.aff+1);if(b<2&&m.aff>=2)N.notes.push(`${nm}が常連になった ★★`);else if(b<5&&m.aff===5)N.notes.push(`${nm}は店の顔になった ★★★★★`)}
   else if(grade==='fail'||grade==='left'){m.aff=Math.max(0,m.aff-1);m.skip=true;N.notes.push(grade==='left'?`${nm}は待ちきれずに帰った。明日は来ない…`:`${nm}はご機嫌ななめ。明日は来ない…`)}
   if(ids&&grade!=='fail') m.last=ids;
+  if(ids&&grade==='perfect'&&!m.usual) m.usual=ids;
 }
 function finishCust(cust,res,ids){
   cust.done=true; cust.res=res;
@@ -782,7 +814,7 @@ function renderBar(){
   }
   const sub=$('subst'); sub.hidden=true;
   if(cust&&!cust.done&&!N.busy){
-    const out=requiredIds(cust.order).find(id=>G.stock[id]<=0);
+    const need=countsOf(requiredIds(cust.order)); const out=Object.keys(need).find(id=>G.stock[id]<need[id]);
     if(out){sub.hidden=false;sub.textContent=`「${BY_ID[out].name}を切らしてまして…」と伝えて、代わりを提案する`}
   }
   renderGlass();
@@ -792,9 +824,10 @@ function renderGlass(){
   const g=$('glass'); g.innerHTML='';
   N.glass.forEach(ing=>{const d=document.createElement('div');d.className='layer';d.style.background=ing.color;g.appendChild(d)});
   const gi=$('glassItems'); gi.innerHTML='';
-  if(!N.glass.length) gi.innerHTML='<span class="empty">素材をタップしてグラスに入れる（最大4つ）</span>';
-  N.glass.forEach((ing,i)=>{const c=document.createElement('button');c.className='chip';c.innerHTML=`<i style="background:${ing.color}"></i>${ing.name} ×`;c.onclick=()=>removeIng(i);gi.appendChild(c)});
-  document.querySelectorAll('#shelf button').forEach(b=>b.classList.toggle('in',!!N.glass.find(x=>x.id===b.dataset.id)));
+  if(!N.glass.length) gi.innerHTML='<span class="empty">素材をタップしてグラスに入れる（4杯分まで。同じ素材は2回まで）</span>';
+  const c=countsOf(N.glass.map(i=>i.id));
+  Object.keys(c).forEach(id=>{const ing=BY_ID[id];const b=document.createElement('button');b.className='chip';b.innerHTML=`<i style="background:${ing.color}"></i>${ing.name}${c[id]>1?' ×'+c[id]:''}<span class="x">−</span>`;b.onclick=()=>removeIng(id);gi.appendChild(b)});
+  document.querySelectorAll('#shelf button').forEach(b=>b.classList.toggle('in',!!c[b.dataset.id]));
   const ok=canMix(); $('serve').disabled=!ok; $('clear').disabled=!ok;
 }
 
