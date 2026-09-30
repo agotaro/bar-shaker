@@ -902,7 +902,7 @@ function showAchToast(){
 function initMem(){CHARS.forEach(c=>{const m=G.mem[c.id]||(G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false});if(m.usual===undefined)m.usual=null})}
 
 function newGame(diff,econ){
-  G={diff,econ:econ||'normal',night:1,money:1000,score:0,stock:{},mem:{},learned:{},moodKnown:{},history:[]};
+  G={diff,econ:econ||'normal',night:1,money:1000,score:0,stock:{},mem:{},learned:{},moodKnown:{},history:[],stories:null,seenPairs:{}};
   ING.forEach(i=>G.stock[i.id]=i.cap);
   initMem(); save(); startNight();
 }
@@ -976,12 +976,13 @@ function pickArrival(){
   if(!all.length) return null;
   const inWin=c=>h>=c.hours[0]&&h<c.hours[1];
   const cands=all.filter(inWin).length?all.filter(inWin):all;
-  const ranked=cands.map(c=>({c,w:(1+G.mem[c.id].aff)*((N.visits[c.id]||0)?0.25:1)*(0.5+Math.random())})).sort((a,b)=>b.w-a.w);
+  const sa=storyArrival(); if(sa){N.visits[sa.char.id]=(N.visits[sa.char.id]||0)+1;return sa}
+  const ranked=cands.map(c=>({c,w:(1+G.mem[c.id].aff)*storyWeight(c.id)*((N.visits[c.id]||0)?0.25:1)*(0.5+Math.random())})).sort((a,b)=>b.w-a.w);
   const ch=ranked[0].c;
   N.visits[ch.id]=(N.visits[ch.id]||0)+1;
-  let o;
-  if(G.night===1&&N.customers===0) o=namedOrder();
-  else{o=makeOrder(ch,G.mem[ch.id],N);if(o.kind==='wild'){N.wild++;if(N.wild>3)o=namedOrder(ch)}}
+  let o=storyOrder(ch);
+  if(!o&&G.night===1&&N.customers===0) o=namedOrder();
+  else if(!o){o=makeOrder(ch,G.mem[ch.id],N);if(o.kind==='wild'){N.wild++;if(N.wild>3)o=namedOrder(ch)}}
   if(N.visits[ch.id]>1) o.revisit=true;
   return {char:ch,order:o};
 }
@@ -993,6 +994,110 @@ function renderClock(){
   $('clockNote').textContent=N.clock>=CLOSE?'閉店時間':N.clock>=LAST?'ラストオーダー':N.clock>=24?'深夜':N.clock>=21?'ピークタイム':'開店';
 }
 
+/* ---------- 関係 ---------- */
+const FIXED=[
+  {a:'pi',b:'chief',la:'…上司ガ来タ。静カニ…',lb:'ピー、報告書はどうした。',name:'上司と部下'},
+  {a:'john',b:'nyanta',la:'ワン！（猫がいる…）',lb:'フシャー！（犬…）',rival:true,name:'犬猿の仲'},
+  {a:'el',b:'bell',la:'また悪さをしていませんか。',lb:'天使が説教しに来たぞ。',name:'天使と悪魔'},
+];
+const LOVE_A=['hikari','tanaka','mei','sora','oyuki'], LOVE_B=['takumi','doc','kero','masa','holmes','mei','sora','hikari','tanaka','pochi'];
+const RIVAL_POOL=['gen','doc','bones','kage','regina','taihozan','masa','holmes','sayuri'];
+const MENTOR_M=['gen','masa','doc','sayuri','john'], MENTOR_S=['mei','takumi','pochi','kero','el'];
+function makeStories(){
+  const used=new Set(), pick=pool=>{const c=shuffle(pool.filter(x=>!used.has(x)));if(!c.length)return null;used.add(c[0]);return c[0]};
+  const st=[];
+  const a=pick(LOVE_A), b=pick(LOVE_B); if(a&&b) st.push({type:'love',a,b,stage:0,fails:0,done:false,log:[]});
+  const x=pick(RIVAL_POOL), y=pick(RIVAL_POOL); if(x&&y) st.push({type:'rival',a:x,b:y,stage:0,done:false,log:[]});
+  const m=pick(MENTOR_M), s2=pick(MENTOR_S); if(m&&s2) st.push({type:'mentor',a:m,b:s2,stage:0,count:0,done:false,log:[]});
+  return st;
+}
+const nm=id=>CHAR_BY_ID[id].name;
+function storyActive(st){ if(st.done) return false; if(st.type==='love') return st.stage===0?G.night<=2||true:G.night>=3; return G.night>=2 }
+function storyPrepare(){
+  if(!G.stories) G.stories=makeStories();
+  if(!G.seenPairs) G.seenPairs={};
+  for(const st of G.stories){
+    if(st.done) continue;
+    const need=st.type==='love'&&st.stage===0?[st.a]:(G.night>=2?[st.a,st.b]:[]);
+    need.forEach(id=>{if(!G.roster.includes(id)){G.roster.push(id);N_new.push(id)}});
+    st.pa=false; st.pb=false; st.aDrink=null; st.bVisited=false;
+  }
+}
+function storyWeight(id){ let w=1; for(const st of G.stories||[]){ if(st.done) continue; if(id===st.a) w*=3; if(id===st.b&&st.type!=='love') w*=2 } return w }
+function storyArrival(){
+  const seated=id=>N.seats.find(s=>s&&s.char.id===id), visited=id=>N.visits[id]||0;
+  for(const st of G.stories||[]){
+    if(st.done) continue;
+    const A=seated(st.a);
+    if(st.type==='love'){
+      if(st.stage===1&&G.night>=3&&st.aDrink&&!visited(st.b)) return {char:CHAR_BY_ID[st.b],order:{kind:'same',glass:st.aDrink,story:st,role:'b',text:`（隣をちらちら見ている）…隣の人が飲んでたやつ、同じのを。`,label:'同じもの',summary:`${nm(st.a)}と同じ`,pay:470}};
+      if(st.stage===2&&A&&!visited(st.b)&&A.order.cocktail) return {char:CHAR_BY_ID[st.b],order:{kind:'named',cocktail:A.order.cocktail,story:st,role:'b',text:`（照れている）…${nm(st.a)}と同じので。`,label:'カクテル',summary:A.order.cocktail.name,pay:450}};
+    }
+    if(st.type==='rival'&&G.night>=2&&st.aDrink&&!visited(st.b)){
+      if(st.stage===0) return {char:CHAR_BY_ID[st.b],order:{kind:'omakase',notSame:st.aDrink,story:st,role:'b',text:`…${nm(st.a)}がいる。あいつと同じのは嫌だ。何か別のを。`,label:'おまかせ',summary:'あいつと違うの',pay:450}};
+      if(st.stage===1) return {char:CHAR_BY_ID[st.b],order:{kind:'same',glass:st.aDrink,story:st,role:'b',text:`…まあ、${nm(st.a)}の飲んでるやつも悪くはない。同じのを。`,label:'同じもの',summary:`${nm(st.a)}と同じ`,pay:470}};
+    }
+    if(st.type==='mentor'&&G.night>=2&&st.stage===0&&st.aDrink&&!visited(st.b)) return {char:CHAR_BY_ID[st.b],order:{kind:'same',glass:st.aDrink,story:st,role:'b',text:`${nm(st.a)}さんと同じのを。憧れてるんだ。`,label:'同じもの',summary:`${nm(st.a)}と同じ`,pay:470}};
+  }
+  return null;
+}
+function storyOrder(ch){
+  for(const st of G.stories||[]){
+    if(st.done) continue;
+    if(st.type==='love'&&ch.id===st.a){
+      if(st.stage===0) return {kind:'abstract',def:ABSTRACT.find(a=>a.text.startsWith('失恋')),story:st,role:'a',text:'失恋したんだ…察して。',label:'ふわっとした注文',summary:'失恋…',pay:450};
+      if(st.stage===2&&G.night>=3){const c=rnd(COCKTAILS.filter(x=>x.ings.length<=3));return {kind:'named',cocktail:c,count:2,served:0,grades:[],money:0,story:st,role:'a',text:`今日は二人なんだ。${c.name}を2つ、乾杯用に。`,label:'乾杯',summary:`${c.name} ×2`,pay:450}}
+    }
+    if(st.type==='mentor'&&ch.id===st.b&&st.stage===1) return {kind:'omakase',story:st,role:'b',text:'そろそろ自分の一杯を決めたい。おまかせで。',label:'おまかせ',summary:'自分の一杯',pay:450};
+  }
+  return null;
+}
+function storyOnSeat(cust){
+  const others=N.seats.filter(s=>s&&s!==cust&&!s.done).map(s=>s.char.id), id=cust.char.id;
+  for(const f of FIXED){
+    const other=id===f.a?f.b:id===f.b?f.a:null; if(!other||!others.includes(other)) continue;
+    cust.text=(id===f.a?f.la:f.lb)+' '+cust.text; G.seenPairs[f.a+'-'+f.b]=1;
+  }
+  for(const st of G.stories||[]){
+    if(st.type==='rival'&&!st.done&&st.stage<2){ if((id===st.a&&others.includes(st.b))||(id===st.b&&others.includes(st.a))){ if(!cust.order.story) cust.text=`…${nm(id===st.a?st.b:st.a)}がいる。 `+cust.text; } }
+  }
+}
+function rivalDrain(c){
+  const id=c.char.id, others=N.seats.filter(s=>s&&s!==c&&!s.done).map(s=>s.char.id);
+  if(FIXED.some(f=>f.rival&&((id===f.a&&others.includes(f.b))||(id===f.b&&others.includes(f.a))))) return 1.3;
+  if((G.stories||[]).some(st=>st.type==='rival'&&!st.done&&st.stage<2&&((id===st.a&&others.includes(st.b))||(id===st.b&&others.includes(st.a))))) return 1.3;
+  return 1;
+}
+function storyOnServe(cust,res,ids){
+  const id=cust.char.id, perfect=res.grade==='perfect';
+  for(const st of G.stories||[]){
+    if(st.done) continue;
+    if(id===st.a&&ids&&res.grade!=='fail') st.aDrink=ids;
+    if(id===st.a&&perfect) st.pa=true;
+    if(id===st.b){ st.bVisited=true; if(perfect) st.pb=true; }
+    if(st.type==='love'&&st.stage===0&&id===st.a&&cust.order.story){ st.stage=1; st.log.push(`${nm(st.a)}は失恋したらしい`); N.notes.push(`${nm(st.a)}は失恋したらしい…`); }
+  }
+}
+function storyEndNight(){
+  for(const st of G.stories||[]){
+    if(st.done) continue;
+    const A=nm(st.a), B=nm(st.b);
+    if(st.type==='love'){
+      if(st.stage===1&&st.bVisited){
+        if(st.pa&&st.pb){st.stage=2;st.log.push(`${A}と${B}、いい感じだった`);N.notes.push(`${A}と${B}、なんだかいい感じだった`)}
+        else{st.fails++; if(st.fails>=2){const pool=LOVE_B.filter(x=>x!==st.a&&x!==st.b&&!G.stories.some(o=>o!==st&&(o.a===x||o.b===x)));if(pool.length){st.log.push(`${A}と${B}は、続かなかった`);N.notes.push(`${A}と${B}は続かなかったみたい…`);st.b=rnd(pool);st.fails=0}}}
+      }else if(st.stage===2&&st.bVisited&&st.pa&&st.pb){st.stage=3;st.done=true;st.log.push(`${A}と${B}が付き合い始めた`);N.notes.push(`💕 ${A}と${B}が付き合い始めた！`);unlock('story_love')}
+    }
+    if(st.type==='rival'){
+      if(st.stage===0&&st.bVisited&&st.pa&&st.pb){st.stage=1;st.log.push(`${A}と${B}、少し歩み寄った`);N.notes.push(`${A}と${B}、少しだけ歩み寄った`)}
+      else if(st.stage===1&&st.bVisited&&st.pb){st.stage=2;st.done=true;st.log.push(`${A}と${B}が仲直りした`);N.notes.push(`🤝 ${A}と${B}が仲直りした`);unlock('story_rival')}
+    }
+    if(st.type==='mentor'){
+      if(st.stage===0&&st.bVisited&&st.pb){st.count++;st.log.push(`${B}は${A}を追いかけている（${st.count}/2）`);if(st.count>=2){st.stage=1;N.notes.push(`${B}が自分の一杯を探し始めた`)}}
+      else if(st.stage===1&&st.bVisited&&st.pb){st.stage=2;st.done=true;st.log.push(`${B}が一人前になった`);N.notes.push(`🎓 ${B}が一人前になった`);unlock('story_mentor')}
+    }
+  }
+}
 function ensureRoster(){
   const ids=CHARS.map(c=>c.id);
   const inWin=(id,h)=>{const c=CHAR_BY_ID[id];return h>=c.hours[0]&&h<c.hours[1]};
@@ -1012,7 +1117,7 @@ function ensureRoster(){
 let N_new=[];
 function startNight(){
   D=DIFF[G.diff]; E=ECON[G.econ];
-  ensureRoster();
+  ensureRoster(); storyPrepare();
   const absent=CHARS.filter(c=>G.mem[c.id].skip).map(c=>c.id);
   CHARS.forEach(c=>{G.mem[c.id].skip=false});
   N={seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,score:0,combo:0,maxCombo:0,perfect:0,customers:0,visits:{},mem:0,wild:0,lastDrink:null,results:[],notes:[],busy:null,clock:OPEN,sinceArrival:99,nextDelay:0,exhausted:false,ending:false,timer:null,lastActive:null,absent};
@@ -1041,6 +1146,7 @@ function seatNext(i,a){
   if(o.kind==='mood'){if(D.tell&&!G.moodKnown[o.moodKey]){cust.text+=' '+o.mood.hint;G.moodKnown[o.moodKey]=true}if(o.mood.patience)cust.patienceMax*=o.mood.patience,cust.patience=cust.patienceMax}
   if(o.count>1){cust.patienceMax*=1.8;cust.patience=cust.patienceMax}
   if(o.revisit) cust.text='また来ちゃった。'+cust.text;
+  storyOnSeat(cust);
   N.customers++; if(!STATS.met[ch.id]){STATS.met[ch.id]=1;saveStats();if(CHARS.every(c=>STATS.met[c.id]))unlock('meet_all')}
   N.seats[i]=cust; N.sinceArrival=0; N.nextDelay=arrivalGap();
   if(N.active<0||!N.seats[N.active]||N.seats[N.active].done) N.active=i;
@@ -1060,7 +1166,7 @@ function tick(){
   N.seats.forEach(c=>{
     if(!c||c.done) return;
     if(N.busy&&N.busy.cust===c) return;
-    c.patience-=dt;
+    c.patience-=dt*rivalDrain(c);
     if(c.patience<=0) leaveCust(c);
   });
   if(N.busy){
@@ -1215,6 +1321,7 @@ function evaluate(cust){
     if(distinct<2&&grade==='perfect') grade='partial';
     if(grade==='perfect'&&b.tooStrong&&!ch.likes.includes('strong')){grade='partial';line='…強すぎる。何杯分入れたの？'}
     if(grade==='perfect'&&b.tooSweet&&!ch.likes.includes('sweet')){grade='partial';line='…甘すぎ。歯が溶けそう'}
+    if(grade==='perfect'&&o.notSame&&msJaccard(got,o.notSame)>=0.5){grade='partial';line='…あいつと同じじゃないか'}
     const c=matchCocktail(glass);
     if(!line) line=grade==='perfect'?(c?`お、${c.name}か。${L.ok}`:L.ok):`${grade==='partial'?L.meh:L.ng}（${prefHint(ch,p)||'なんか違う'}）`;
   }
@@ -1251,7 +1358,7 @@ function finishCust(cust,res,ids){
     if(k==='mood'){STATS.moods[cust.order.moodKey]=1;saveStats();if(Object.keys(MOODS).every(m=>STATS.moods[m]))unlock('mood_all')}
   }
   if(/強すぎる/.test(res.line||''))unlock('too_strong');
-  remember(cust,res.grade,ids);
+  remember(cust,res.grade,ids); storyOnServe(cust,res,ids);
   renderSeats(); renderStats(); renderShelf();
   if(N.active===cust.seat){renderActive();renderBar()}
   setTimeout(()=>{
@@ -1369,6 +1476,7 @@ function endNight(){
   if(G.night>=2&&!N.stockout)unlock('no_stockout');
   if(CHARS.some(c=>G.mem[c.id].aff>=5))unlock('regular5');
   if(CHARS.filter(c=>G.mem[c.id].aff>=2).length>=10)unlock('regulars10');
+  storyEndNight();
   if(G.money<0){clearSave();renderGameOver();return}
   save(); renderClosing();
 }
@@ -1434,14 +1542,29 @@ function showTitle(){
   <p class="sec">腕前</p><div class="diffs" id="diffRow">${opts(DIFF,'d',selDiff)}</div>
   <p class="sec">お金</p><div class="diffs" id="econRow">${opts(ECON,'e',selEcon)}</div>
   <p id="hiLine"></p>
-  <button id="go">開店する</button><br><button id="achBtn" class="ghost small">🏆 実績 ${Object.keys(loadAch()).length}/${ACH.length}</button>`;
+  <button id="go">開店する</button><br><button id="achBtn" class="ghost small">🏆 実績 ${Object.keys(loadAch()).length}/${ACH.length}</button> <button id="noteBtn" class="ghost small">📓 常連ノート</button>`;
   $('overlay').hidden=false;
   if(s) $('cont').onclick=()=>continueGame(s);
   const pick=(row,attr,setter)=>row.querySelectorAll('.diff').forEach(b=>b.onclick=()=>{setter(b.dataset[attr]);row.querySelectorAll('.diff').forEach(x=>x.classList.toggle('sel',x===b))});
   const hiLine=()=>{const h=loadHi()[selDiff+'-'+selEcon];$('hiLine').innerHTML=h?`ハイスコア <span class="hi">${h.week.toLocaleString()} pt</span> / 週　<span class="hi">${h.night.toLocaleString()} pt</span> / 夜`:'ハイスコア: まだなし'};
   pick($('diffRow'),'d',v=>{selDiff=v;hiLine()}); pick($('econRow'),'e',v=>{selEcon=v;hiLine()}); hiLine();
   $('go').onclick=()=>newGame(selDiff,selEcon);
-  $('achBtn').onclick=showAch;
+  $('achBtn').onclick=showAch; $('noteBtn').onclick=showNotebook;
+}
+function showNotebook(){
+  const g=G||load();
+  let body='';
+  if(!g||!g.stories){body='<p>まだ何も書いていない。店を開けてから戻ってくると、気づいたことが増えていく。</p>'}
+  else{
+    const regs=CHARS.filter(c=>g.mem[c.id]&&g.mem[c.id].aff>=2);
+    body+='<h4>常連</h4>'+(regs.length?regs.map(c=>`<div class="ach"><div class="mini" style="width:34px;height:34px">${c.svg}</div><div><b>${c.name} <span class="hi" style="font-size:11px">${'★'.repeat(g.mem[c.id].aff)}</span></b><small>${g.mem[c.id].usual?'いつもの: '+g.mem[c.id].usual.map(id=>BY_ID[id].name).join('+'):'まだいつものは決まっていない'}</small></div></div>`).join(''):'<div class="ach locked"><small>まだ常連はいない</small></div>');
+    body+='<h4>気づいたこと</h4>';
+    const pairs=FIXED.filter(f=>g.seenPairs&&g.seenPairs[f.a+'-'+f.b]).map(f=>`<div class="ach"><span class="ic">👀</span><div><b>${nm(f.a)}と${nm(f.b)}</b><small>${f.name}らしい</small></div></div>`).join('');
+    const stories=g.stories.map(st=>st.log.length?`<div class="ach"><span class="ic">${st.done?'📖':'✏️'}</span><div><b>${nm(st.a)}と${nm(st.b)}</b><small>${st.log.join(' → ')}</small></div></div>`:'').join('');
+    body+=(pairs+stories)||'<div class="ach locked"><small>まだ何も。同じ時間に来る客同士を見ていると、何か分かるかも</small></div>';
+  }
+  $('card').innerHTML=`<h1>📓 常連ノート</h1><div class="achlist">${body}</div><button id="back" class="ghost">戻る</button>`;
+  $('overlay').hidden=false; $('back').onclick=showTitle;
 }
 function showAch(){
   const a=loadAch(); const cats=['技','店','遊び','人'];
