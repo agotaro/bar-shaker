@@ -29,6 +29,16 @@ header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
 .pts{color:var(--info)}
 .combo{color:var(--bad);font-weight:700}
 .hi{color:var(--accent);font-weight:700}
+.achToast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#2a1c22;padding:8px 16px;border-radius:12px;font-size:14px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:achin .35s cubic-bezier(.2,.9,.3,1.3);white-space:nowrap}
+@keyframes achin{0%{transform:translate(-50%,-20px);opacity:0}100%{transform:translate(-50%,0);opacity:1}}
+.achlist{text-align:left;margin-top:8px;max-height:60vh;overflow:auto}
+.achlist h4{margin:12px 0 6px;font-size:13px;color:var(--muted);letter-spacing:.1em}
+.ach{display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:10px;background:var(--panel2);margin-bottom:6px;font-size:13px}
+.ach.locked{opacity:.45}
+.ach .ic{font-size:18px;flex:none}
+.ach b{display:block;font-size:14px}
+.ach small{color:var(--muted)}
+.card button.ghost.small{font-size:13px;padding:8px 14px;margin-top:6px}
 
 .seats{display:grid;gap:8px;margin-bottom:10px}
 .seat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;gap:8px;align-items:center;cursor:pointer;min-height:64px;position:relative;transition:border-color .15s}
@@ -810,6 +820,37 @@ const MOODS={
   down:{icon:'🌧️',name:'落ち込んでる',hint:'染みるやつを。甘いのは要らない',minStrong:3,maxSweet:2,ok:'…染みる',ng:'…違うんだよなあ'},
   rush:{icon:'⏱️',name:'急いでる',hint:'なんでもいいから、早く！',minCount:2,ok:'助かる！じゃ！',ng:'遅い！',patience:0.55,pay:1.3},
 };
+const ACH=[
+  {id:'first_perfect',cat:'技',name:'初めてのパーフェクト',desc:'パーフェクトを1回出す'},
+  {id:'combo5',cat:'技',name:'5連続',desc:'パーフェクトを5連続で出す'},
+  {id:'combo10',cat:'技',name:'10連続',desc:'パーフェクトを10連続で出す'},
+  {id:'night15',cat:'技',name:'繁盛',desc:'1晩に15人さばく'},
+  {id:'night20',cat:'技',name:'大繁盛',desc:'1晩に20人さばく'},
+  {id:'strong_read',cat:'技',name:'分かってるね',desc:'頼まれていないのに濃いめか薄めを当てる'},
+  {id:'na_perfect',cat:'技',name:'明日も頑張れる',desc:'ノンアルの注文を完璧に出す'},
+  {id:'bulk_perfect',cat:'技',name:'乾杯！',desc:'まとめ注文を全部完璧に出す'},
+  {id:'like_perfect',cat:'技',name:'アレンジャー',desc:'「っぽいの」で正解する'},
+  {id:'mood_all',cat:'技',name:'心を読む',desc:'4種類の気分すべてに正解する'},
+  {id:'week_done',cat:'店',name:'一週間おつかれさま',desc:'7夜を終える'},
+  {id:'profit_week',cat:'店',name:'黒字経営',desc:'普通かシビアで一週間を終え、所持金5,000円以上'},
+  {id:'no_stockout',cat:'店',name:'品切れなし',desc:'夜2以降、在庫切れを出さずに1晩を終える'},
+  {id:'master_s',cat:'店',name:'伝説の店',desc:'週スコアでSランクを取る'},
+  {id:'busy_night',cat:'店',name:'途切れない夜',desc:'1晩に12人以上さばく'},
+  {id:'wild_all',cat:'遊び',name:'ノリがいい',desc:'無茶ぶりに10回応える'},
+  {id:'tanaka_name',cat:'遊び',name:'なんで知ってるの',desc:'田中の名前を当てる'},
+  {id:'juggle_fail',cat:'遊び',name:'ガシャーン',desc:'ジャグリングでボトルを割る'},
+  {id:'sing_sayuri',cat:'遊び',name:'デュエット',desc:'小百合の前で熱唱する'},
+  {id:'too_strong',cat:'遊び',name:'何杯分入れたの',desc:'「強すぎる」と言われる'},
+  {id:'regular5',cat:'人',name:'店の顔',desc:'常連度★5の客を作る'},
+  {id:'regulars10',cat:'人',name:'愛される店',desc:'常連（★2以上）を10人にする'},
+  {id:'meet_all',cat:'人',name:'全員と乾杯',desc:'30人全員に会う'},
+  {id:'usual_perfect',cat:'人',name:'覚えてるね',desc:'「いつもの」を完璧に出す'},
+  {id:'same_perfect',cat:'人',name:'見てたんだ',desc:'「さっきの人と同じの」を完璧に出す'},
+  {id:'story_love',cat:'人',name:'？？？',desc:'誰かの恋を見届ける',hidden:true},
+  {id:'story_rival',cat:'人',name:'？？？',desc:'犬猿の仲を和解させる',hidden:true},
+  {id:'story_mentor',cat:'人',name:'？？？',desc:'弟子が一人前になる',hidden:true},
+];
+const ACH_KEY='barshaker.ach', STAT_KEY='barshaker.stats';
 const mocktail=c=>{const ids=c.ings.filter(id=>!BY_ID[id].tags.strong);if(ids.length<2)ids.push(ids.includes('lime')?'soda':'lime');return ids};
 const BADGE={perfect:'😆',partial:'😐',fail:'😠',left:'💨'};
 const SAVE_KEY='barshaker.v2', HI_KEY='barshaker.hi';
@@ -839,6 +880,23 @@ function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
 function loadHi(){try{return JSON.parse(localStorage.getItem(HI_KEY))||{}}catch(e){return {}}}
 function saveHi(h){try{localStorage.setItem(HI_KEY,JSON.stringify(h))}catch(e){}}
 function hiKey(){return G.diff+'-'+G.econ}
+function loadAch(){try{return JSON.parse(localStorage.getItem(ACH_KEY))||{}}catch(e){return {}}}
+function loadStats(){try{const st=JSON.parse(localStorage.getItem(STAT_KEY))||{};st.wild=st.wild||0;st.moods=st.moods||{};st.met=st.met||{};return st}catch(e){return {wild:0,moods:{},met:{}}}}
+let STATS=loadStats();
+function saveStats(){try{localStorage.setItem(STAT_KEY,JSON.stringify(STATS))}catch(e){}}
+let achQueue=[];
+function unlock(id){
+  const a=loadAch(); if(a[id]) return; const def=ACH.find(x=>x.id===id); if(!def) return;
+  a[id]=Date.now(); try{localStorage.setItem(ACH_KEY,JSON.stringify(a))}catch(e){}
+  if(N) (N.newAch=N.newAch||[]).push(def);
+  achQueue.push(def); if(achQueue.length===1) showAchToast();
+}
+function showAchToast(){
+  const def=achQueue[0]; if(!def) return;
+  const el=document.createElement('div'); el.className='achToast'; el.innerHTML=`🏆 実績解除 <b>${esc(def.hidden?def.desc:def.name)}</b>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.remove();achQueue.shift();showAchToast()},2600);
+}
 function initMem(){CHARS.forEach(c=>{const m=G.mem[c.id]||(G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false});if(m.usual===undefined)m.usual=null})}
 
 function newGame(diff,econ){
@@ -981,7 +1039,7 @@ function seatNext(i,a){
   if(o.kind==='mood'){if(D.tell&&!G.moodKnown[o.moodKey]){cust.text+=' '+o.mood.hint;G.moodKnown[o.moodKey]=true}if(o.mood.patience)cust.patienceMax*=o.mood.patience,cust.patience=cust.patienceMax}
   if(o.count>1){cust.patienceMax*=1.8;cust.patience=cust.patienceMax}
   if(o.revisit) cust.text='また来ちゃった。'+cust.text;
-  N.customers++;
+  N.customers++; if(!STATS.met[ch.id]){STATS.met[ch.id]=1;saveStats();if(CHARS.every(c=>STATS.met[c.id]))unlock('meet_all')}
   N.seats[i]=cust; N.sinceArrival=0; N.nextDelay=arrivalGap();
   if(N.active<0||!N.seats[N.active]||N.seats[N.active].done) N.active=i;
   renderSeats(); renderActive(); renderBar();
@@ -1027,7 +1085,7 @@ function serve(){
   const cust=activeCust(); if(!canMix()) return;
   if(!N.glass.length){toast('グラスが空だよ！');shakeGlass();return}
   const o=cust.order, res=evaluate(cust);
-  N.glass.forEach(i=>{G.stock[i.id]=Math.max(0,G.stock[i.id]-1)});
+  N.glass.forEach(i=>{G.stock[i.id]=Math.max(0,G.stock[i.id]-1);if(G.stock[i.id]<=0)N.stockout=true});
   const ids=N.glass.map(i=>i.id);
   N.glass=[];
   if(res.grade!=='fail') N.lastDrink={ids,name:cust.char.name};
@@ -1061,6 +1119,10 @@ function choose(i){
   if(c.guess&&cust.char.name===c.guess) out={tip:500,line:'…え、なんで知ってるの！？'};
   else if(c.outcomes){const r=Math.random();let acc=0;out=c.outcomes[c.outcomes.length-1];for(const o of c.outcomes){acc+=o.p;if(r<acc){out=o;break}}}
   const grade=out.tip>=250?'perfect':out.tip>0?'partial':'fail';
+  STATS.wild++; saveStats(); if(STATS.wild>=10)unlock('wild_all');
+  if(c.guess&&cust.char.name===c.guess)unlock('tanaka_name');
+  if(out.tip===-200)unlock('juggle_fail');
+  if(cust.char.id==='sayuri'&&/熱唱/.test(c.label))unlock('sing_sayuri');
   const t=c.t||(0.5+Math.max(0,c.tip!=null?c.tip:250)/100);
   N.busy={cust,remaining:t,total:t,label:c.busy||c.label+'…',out:{grade,money:Math.round(out.tip*0.6),line:out.line}};
   $('busyLabel').textContent=N.busy.label; $('busyBar').style.width='0%'; $('busy').hidden=false;
@@ -1080,7 +1142,7 @@ function evaluate(cust){
   const affMult=1+0.08*(G.mem[ch.id].aff||0);
   const pay=g=>g==='perfect'?Math.round((o.pay+150*speed)*affMult):g==='partial'?Math.round(o.pay*0.4):0;
   const got=glass.map(i=>i.id), b=balance(glass), distinct=new Set(got).size;
-  let grade,line,bonus=0;
+  let grade,line,bonus=0,read=false;
   if(o.kind==='named'&&o.mod==='na'){
     const target=o.na, c=countsOf(got);
     const spirits=got.filter(id=>BY_ID[id].tags.strong);
@@ -1120,8 +1182,8 @@ function evaluate(cust){
       const dblS=!!spirit&&c[spirit]>=2, dblM=target.some(id=>id!==spirit&&c[id]>=2);
       const v=dblS&&dblM?'both':dblS?'strong':dblM?'weak':null, mod=o.mod||null;
       if(v===mod){grade='perfect';line=mod?`${L.ok} 注文どおりだ`:L.ok}
-      else if(!mod&&v==='strong'&&ch.likes.includes('strong')){grade='perfect';bonus=60;line=`${L.ok} 濃いめにしてくれたんだ。分かってるね`}
-      else if(!mod&&v==='weak'&&ch.hates.includes('strong')){grade='perfect';bonus=60;line=`${L.ok} 薄めにしてくれたんだ。助かる`}
+      else if(!mod&&v==='strong'&&ch.likes.includes('strong')){grade='perfect';bonus=60;read=true;line=`${L.ok} 濃いめにしてくれたんだ。分かってるね`}
+      else if(!mod&&v==='weak'&&ch.hates.includes('strong')){grade='perfect';bonus=60;read=true;line=`${L.ok} 薄めにしてくれたんだ。助かる`}
       else if(!mod){grade='partial';line=`${L.meh}（${v==='strong'?'濃すぎる':v==='weak'?'薄い…':'量が多すぎ'}）`}
       else{grade='partial';line=`${L.meh}（${mod==='strong'?'濃いめって言ったのに':'薄めって言ったのに'}）`}
     }
@@ -1152,7 +1214,7 @@ function evaluate(cust){
     const c=matchCocktail(glass);
     if(!line) line=grade==='perfect'?(c?`お、${c.name}か。${L.ok}`:L.ok):`${grade==='partial'?L.meh:L.ng}（${prefHint(ch,p)||'なんか違う'}）`;
   }
-  return {grade,money:pay(grade)+bonus,line};
+  return {grade,money:pay(grade)+bonus,line,read};
 }
 
 /* ---------- 客の退場・記憶 ---------- */
@@ -1176,6 +1238,14 @@ function finishCust(cust,res,ids){
   else N.combo=0;
   res.pts=pts; res.combo=N.combo; N.score+=pts;
   N.results.push({char:cust.char,grade:res.grade});
+  const k=cust.order.kind;
+  if(res.grade==='perfect'){
+    unlock('first_perfect'); if(N.combo>=5)unlock('combo5'); if(N.combo>=10)unlock('combo10');
+    if(k==='like')unlock('like_perfect'); if(k==='usual')unlock('usual_perfect'); if(k==='same')unlock('same_perfect');
+    if(cust.order.count>1)unlock('bulk_perfect'); if(cust.order.mod==='na')unlock('na_perfect'); if(res.read)unlock('strong_read');
+    if(k==='mood'){STATS.moods[cust.order.moodKey]=1;saveStats();if(Object.keys(MOODS).every(m=>STATS.moods[m]))unlock('mood_all')}
+  }
+  if(/強すぎる/.test(res.line||''))unlock('too_strong');
   remember(cust,res.grade,ids);
   renderSeats(); renderStats(); renderShelf();
   if(N.active===cust.seat){renderActive();renderBar()}
@@ -1285,6 +1355,10 @@ function endNight(){
   G.money-=rent; G.score=(G.score||0)+N.score;
   G.history.push({night:G.night,sales:N.sales,rent,perfect:N.perfect,customers:N.results.length,score:N.score,maxCombo:N.maxCombo});
   const hi=loadHi(),k=hiKey(); hi[k]=hi[k]||{night:0,week:0}; N.newHi=N.score>hi[k].night; if(N.newHi){hi[k].night=N.score;saveHi(hi)}
+  const n=N.results.length; if(n>=12)unlock('busy_night'); if(n>=15)unlock('night15'); if(n>=20)unlock('night20');
+  if(G.night>=2&&!N.stockout)unlock('no_stockout');
+  if(CHARS.some(c=>G.mem[c.id].aff>=5))unlock('regular5');
+  if(CHARS.filter(c=>G.mem[c.id].aff>=2).length>=10)unlock('regulars10');
   if(G.money<0){clearSave();renderGameOver();return}
   save(); renderClosing();
 }
@@ -1296,7 +1370,8 @@ function renderGameOver(){
 }
 function renderClosing(){
   const lineup=N.results.map(r=>`<div class="mini" title="${r.char.name}">${r.char.svg}<span>${BADGE[r.grade]}</span></div>`).join('');
-  const notes=N.notes.length?`<div class="notes">${N.notes.map(esc).join('<br>')}</div>`:'';
+  const achs=(N.newAch||[]).map(a=>`🏆 ${esc(a.hidden?a.desc:a.name)}`);
+  const notes=(N.notes.length||achs.length)?`<div class="notes">${achs.concat(N.notes.map(esc)).join('<br>')}</div>`:'';
   const last=G.night>=NIGHTS;
   const rent=rentNow(), profit=N.sales-rent;
   const profitTag=`<b style="color:${profit>=0?'var(--good)':'var(--bad)'}">${profit<0?'-':''}${yen(Math.abs(profit))}</b>`;
@@ -1330,6 +1405,7 @@ function renderFinal(){
   const regulars=CHARS.filter(c=>G.mem[c.id].aff>=3);
   const hi=loadHi(),k=hiKey(); hi[k]=hi[k]||{night:0,week:0}; const newHi=week>hi[k].week; if(newHi){hi[k].week=week;saveHi(hi)}
   const rank=week>=18000?'S':week>=12000?'A':week>=6000?'B':'C';
+  unlock('week_done'); if(rank==='S')unlock('master_s'); if(G.econ!=='easy'&&G.money>=5000)unlock('profit_week');
   const cm={S:'伝説のバーテンダー',A:'この街で一番の店',B:'まずまずの一週間',C:'来週こそ'}[rank];
   const reg=regulars.length?`<p>常連になった客</p><div class="lineup">${regulars.map(c=>`<div class="mini">${c.svg}<span class="st">${'★'.repeat(G.mem[c.id].aff)}</span></div>`).join('')}</div>`:'<p>常連はできなかった…</p>';
   $('card').innerHTML=`<p>一週間おつかれさま</p><div class="rank">${rank}</div><p><b style="color:var(--text)">${cm}</b></p><div class="big">${week.toLocaleString()} pt${newHi?' <span class="hi" style="font-size:14px">週の新記録！</span>':''}</div><p>一番のびた夜: 夜${best.night}（${(best.score||0).toLocaleString()} pt）<br>総売上 ${yen(total)} / 手元に残ったお金 ${yen(G.money)}</p>${reg}<button id="again">最初から</button>`;
@@ -1348,13 +1424,20 @@ function showTitle(){
   <p class="sec">腕前</p><div class="diffs" id="diffRow">${opts(DIFF,'d',selDiff)}</div>
   <p class="sec">お金</p><div class="diffs" id="econRow">${opts(ECON,'e',selEcon)}</div>
   <p id="hiLine"></p>
-  <button id="go">開店する</button>`;
+  <button id="go">開店する</button><br><button id="achBtn" class="ghost small">🏆 実績 ${Object.keys(loadAch()).length}/${ACH.length}</button>`;
   $('overlay').hidden=false;
   if(s) $('cont').onclick=()=>continueGame(s);
   const pick=(row,attr,setter)=>row.querySelectorAll('.diff').forEach(b=>b.onclick=()=>{setter(b.dataset[attr]);row.querySelectorAll('.diff').forEach(x=>x.classList.toggle('sel',x===b))});
   const hiLine=()=>{const h=loadHi()[selDiff+'-'+selEcon];$('hiLine').innerHTML=h?`ハイスコア <span class="hi">${h.week.toLocaleString()} pt</span> / 週　<span class="hi">${h.night.toLocaleString()} pt</span> / 夜`:'ハイスコア: まだなし'};
   pick($('diffRow'),'d',v=>{selDiff=v;hiLine()}); pick($('econRow'),'e',v=>{selEcon=v;hiLine()}); hiLine();
   $('go').onclick=()=>newGame(selDiff,selEcon);
+  $('achBtn').onclick=showAch;
+}
+function showAch(){
+  const a=loadAch(); const cats=['技','店','遊び','人'];
+  const list=cats.map(c=>`<h4>${c}</h4>`+ACH.filter(x=>x.cat===c).map(x=>{const on=!!a[x.id];return `<div class="ach ${on?'':'locked'}"><span class="ic">${on?'🏆':x.hidden?'❓':'🔒'}</span><div><b>${on?esc(x.name):x.hidden?'？？？':esc(x.name)}</b><small>${esc(x.desc)}</small></div></div>`}).join('')).join('');
+  $('card').innerHTML=`<h1>🏆 実績</h1><p>${Object.keys(a).length} / ${ACH.length}</p><div class="achlist">${list}</div><button id="back" class="ghost">戻る</button>`;
+  $('overlay').hidden=false; $('back').onclick=showTitle;
 }
 
 $('serve').onclick=serve;
