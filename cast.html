@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Bar Shaker キャスト</title>
+<style>
+body{margin:0;background:#17111a;color:#f6ecdf;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;padding:16px}
+h1{font-size:18px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px}
+.c{text-align:center}
+.c .art{width:100px;height:100px;margin:0 auto 6px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+.c svg{width:100%;height:100%;display:block}
+.c b{display:block;font-size:14px}
+.c small{color:#b9a7b3;font-size:11px}
+</style></head><body>
+<h1>🍸 Bar Shaker 追加キャスト（20人）</h1>
+<div class="grid" id="g"></div>
+<script>
+const NEWCHARS=[
+{id:'masa',name:'マサ',title:'寿司職人',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-masa"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#3b4a5a"/><g clip-path="url(#cp-masa)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f4f1ea"/>
+<path d="M30 54 L40 70 L50 54 L53 58 L40 78 L27 58Z" fill="#dcd6c8"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f2cfae"/>
+<path d="M21 30 Q21 13 40 13 Q59 13 59 30 Q52 24 40 25 Q28 24 21 30Z" fill="#2b2b2b"/>
+<path d="M20 24 Q40 18 60 24 L60 29 Q40 23 20 29Z" fill="#fff"/>
+<path d="M22 26 Q40 20 58 26" fill="none" stroke="#2b3a8a" stroke-width="1.4" stroke-dasharray="3 3"/>
+<path d="M58 25 L67 19 L65 27 L70 27 L62 30Z" fill="#fff"/>
+<path d="M27 31 L37 30 M43 30 L53 31" stroke="#2b2b2b" stroke-width="3" stroke-linecap="round"/>
+<path d="M30 36 L36 36 M44 36 L50 36" stroke="#333" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M35 45 L45 45" stroke="#a0674f" stroke-width="1.6" stroke-linecap="round"/>
+</g></svg>`},
+{id:'hikari',name:'ヒカリ',title:'看護師（準夜勤明け）',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-hikari"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#4c7a8a"/><g clip-path="url(#cp-hikari)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5fb3a3"/>
+<path d="M33 54 L40 63 L47 54Z" fill="#3f8f80"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="53" cy="15" r="7" fill="#5a3a2a"/>
+<circle cx="53" cy="15" r="7" fill="none" stroke="#f28ca0" stroke-width="1.6"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 31 Q21 12 40 12 Q59 12 59 31 Q55 24 45 25 Q36 20 21 31Z" fill="#5a3a2a"/>
+<path d="M29 35 Q33 37.5 37 35 M43 35 Q47 37.5 51 35" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<path d="M30 39.5 Q33 41.5 36 39.5 M44 39.5 Q47 41.5 50 39.5" stroke="#b58aa0" stroke-width="1.3" fill="none"/>
+<path d="M36 45 Q40 47 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<rect x="52" y="60" width="2.6" height="11" fill="#333" transform="rotate(-8 53 65)"/>
+</g></svg>`},
+{id:'oyuki',name:'おユキ',title:'幽霊',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-oyuki"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2a2440"/><g clip-path="url(#cp-oyuki)">
+<path d="M12 30 Q8 22 14 18 Q18 24 14 30 Q20 26 18 34 Q14 38 12 30Z" fill="#8fd3ff" opacity=".8"/>
+<g opacity=".92">
+<path d="M18 40 Q18 14 40 14 Q62 14 62 40 L62 70 Q56 62 50 70 Q45 78 40 70 Q35 78 30 70 Q24 62 18 70Z" fill="#eef0ff"/>
+<path d="M18 40 Q18 14 40 14 Q62 14 62 40 L62 46 Q57 30 51 33 L49 46 Q43 34 37 31 Q29 34 25 62 L18 62Z" fill="#1a1a2a"/>
+<ellipse cx="48" cy="39" rx="3" ry="4" fill="#333"/>
+<circle cx="48.8" cy="37.6" r="1" fill="#fff"/>
+<path d="M44 48 L48 48" stroke="#7a6a80" stroke-width="1.2" stroke-linecap="round"/>
+</g>
+</g></svg>`},
+{id:'ramses',name:'ラムセス',title:'ミイラ',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-ramses"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#6b5b2a"/><g clip-path="url(#cp-ramses)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#e6dcc3"/>
+<path d="M8 62 Q40 58 72 62 M6 70 Q40 66 74 70 M10 78 Q40 74 70 78" stroke="#c9b98f" stroke-width="2" fill="none"/>
+<path d="M28 56 Q40 68 52 56" stroke="#e8b923" stroke-width="3" fill="none"/>
+<circle cx="40" cy="66" r="3" fill="#2aa198"/>
+<rect x="34" y="44" width="12" height="12" fill="#e6dcc3"/>
+<circle cx="40" cy="32" r="19" fill="#e6dcc3"/>
+<path d="M22 24 Q40 20 58 24 M21 31 Q40 27 59 31 M22 40 Q40 44 58 40 M25 47 Q40 51 55 47" stroke="#c9b98f" stroke-width="2.2" fill="none"/>
+<ellipse cx="47" cy="35" rx="4" ry="3" fill="#1a1a1a"/>
+<circle cx="48" cy="34" r="1" fill="#fff"/>
+<path d="M26 31 Q34 29 38 33 L37 38 Q31 39 25 36Z" fill="#dccfb0"/>
+<path d="M58 26 Q68 20 66 12" stroke="#e6dcc3" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M36 45 L44 45" stroke="#9a8a6a" stroke-width="1.5" stroke-linecap="round"/>
+</g></svg>`},
+{id:'yukio',name:'ユキオ',title:'雪だるま',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-yukio"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#7fb3d5"/><g clip-path="url(#cp-yukio)">
+<circle cx="12" cy="20" r="1.5" fill="#fff" opacity=".8"/><circle cx="66" cy="14" r="1.2" fill="#fff" opacity=".8"/><circle cx="70" cy="40" r="1.5" fill="#fff" opacity=".7"/><circle cx="10" cy="50" r="1.2" fill="#fff" opacity=".7"/>
+<circle cx="40" cy="68" r="24" fill="#fff"/>
+<circle cx="40" cy="30" r="19" fill="#fff"/>
+<path d="M22 48 Q40 56 58 48 L58 54 Q40 62 22 54Z" fill="#c0392b"/>
+<path d="M50 52 L56 68 L48 66Z" fill="#c0392b"/>
+<path d="M28 20 L30 4 L54 4 L52 20Z" fill="#3a6ea5"/>
+<rect x="26" y="18" width="30" height="4" rx="1" fill="#2c5282"/>
+<circle cx="33" cy="30" r="2.5" fill="#222"/><circle cx="47" cy="30" r="2.5" fill="#222"/>
+<path d="M40 33 L54 37 L40 39Z" fill="#f39c3d"/>
+<circle cx="34" cy="43" r="1.2" fill="#222"/><circle cx="38" cy="45" r="1.2" fill="#222"/><circle cx="42" cy="45" r="1.2" fill="#222"/><circle cx="46" cy="43" r="1.2" fill="#222"/>
+<circle cx="40" cy="64" r="2" fill="#222"/><circle cx="40" cy="72" r="2" fill="#222"/>
+</g></svg>`},
+{id:'regina',name:'レジーナ',title:'女王様',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-regina"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#5c2a5a"/><g clip-path="url(#cp-regina)">
+<path d="M12 34 Q10 8 40 8 Q70 8 68 34 L70 86 L10 86Z" fill="#8b3a2a"/>
+<path d="M12 86 Q14 58 40 56 Q66 58 68 86Z" fill="#b3132b"/>
+<path d="M14 62 Q40 52 66 62 L66 70 Q40 60 14 70Z" fill="#f5f0e6"/>
+<circle cx="20" cy="66" r="1.2" fill="#222"/><circle cx="30" cy="63" r="1.2" fill="#222"/><circle cx="40" cy="62" r="1.2" fill="#222"/><circle cx="50" cy="63" r="1.2" fill="#222"/><circle cx="60" cy="66" r="1.2" fill="#222"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 32 Q21 12 40 12 Q59 12 59 32 Q56 22 44 24 Q34 20 21 32Z" fill="#8b3a2a"/>
+<path d="M24 20 L28 6 L34 14 L40 4 L46 14 L52 6 L56 20Z" fill="#f3b95f"/>
+<rect x="24" y="17" width="32" height="4" fill="#e0a030"/>
+<circle cx="40" cy="12" r="2" fill="#e03131"/><circle cx="30" cy="15" r="1.5" fill="#2aa198"/><circle cx="50" cy="15" r="1.5" fill="#2aa198"/>
+<path d="M29 35 Q33 33 37 35 M43 35 Q47 33 51 35" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<ellipse cx="33" cy="37" rx="2.6" ry="1.8" fill="#4a2a5a"/><ellipse cx="47" cy="37" rx="2.6" ry="1.8" fill="#4a2a5a"/>
+<path d="M36 45 Q40 43 44 45 Q40 48 36 45Z" fill="#c0392b"/>
+</g></svg>`},
+{id:'taihozan',name:'大鵬山',title:'力士',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-taihozan"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#8a3a2a"/><g clip-path="url(#cp-taihozan)">
+<path d="M0 86 Q2 50 40 48 Q78 50 80 86Z" fill="#f2cfae"/>
+<path d="M0 86 Q4 58 40 60 Q76 58 80 86Z" fill="#1f3a6a"/>
+<path d="M26 60 L40 78 L54 60" stroke="#f5f0e6" stroke-width="3" fill="none"/>
+<rect x="33" y="44" width="14" height="14" fill="#e8b892"/>
+<circle cx="40" cy="32" r="21" fill="#f2cfae"/>
+<path d="M21 28 Q21 11 40 11 Q59 11 59 28 Q52 22 40 22 Q28 22 21 28Z" fill="#1a1a1a"/>
+<path d="M36 12 Q40 2 47 7 Q45 12 40 11Z" fill="#1a1a1a"/>
+<path d="M31 35 L36 35 M44 35 L49 35" stroke="#333" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="28" cy="41" r="4" fill="#f4a3a3" opacity=".6"/><circle cx="52" cy="41" r="4" fill="#f4a3a3" opacity=".6"/>
+<path d="M35 46 Q40 49 45 46" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+{id:'sora',name:'ソラ',title:'宇宙飛行士',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-sora"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#1c2a4a"/><g clip-path="url(#cp-sora)">
+<circle cx="14" cy="18" r="1.2" fill="#fff"/><circle cx="66" cy="10" r="1" fill="#fff"/><circle cx="70" cy="52" r="1.3" fill="#fff"/><circle cx="8" cy="56" r="1" fill="#fff"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f2f2f2"/>
+<rect x="18" y="62" width="10" height="6" rx="1" fill="#e03131"/>
+<rect x="52" y="62" width="9" height="8" rx="1" fill="#3a6ea5"/>
+<ellipse cx="40" cy="54" rx="16" ry="5" fill="#c9d6e3"/>
+<circle cx="40" cy="32" r="23" fill="#e8eef5"/>
+<circle cx="40" cy="33" r="17" fill="#2a3a5a"/>
+<circle cx="40" cy="36" r="12" fill="#f6d3b3"/>
+<path d="M28 34 Q28 24 40 24 Q52 24 52 34 Q46 28 40 30 Q34 28 28 34Z" fill="#3a2a1a"/>
+<circle cx="36" cy="37" r="1.8" fill="#333"/><circle cx="44" cy="37" r="1.8" fill="#333"/>
+<path d="M37 43 Q40 45 43 43" stroke="#a0674f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<path d="M26 26 Q34 16 48 18" stroke="#fff" stroke-width="2.5" fill="none" opacity=".6" stroke-linecap="round"/>
+<circle cx="40" cy="33" r="17" fill="none" stroke="#b8c8d8" stroke-width="2"/>
+</g></svg>`},
+{id:'kage',name:'カゲ',title:'忍者',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-kage"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2b2b33"/><g clip-path="url(#cp-kage)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#141418"/>
+<path d="M24 54 Q40 60 56 54 L58 60 Q40 66 22 60Z" fill="#c0392b"/>
+<path d="M54 58 L70 66 L64 70Z" fill="#c0392b"/>
+<rect x="34" y="44" width="12" height="12" fill="#141418"/>
+<circle cx="40" cy="32" r="19" fill="#141418"/>
+<circle cx="40" cy="32" r="19" fill="none" stroke="#3a3a44" stroke-width="1.5"/>
+<path d="M22 31 Q40 27 58 31 L58 38 Q40 42 22 38Z" fill="#e8b892"/>
+<path d="M28 35 Q33 32 37 35 Q33 37.5 28 35Z" fill="#222"/><path d="M43 35 Q47 32 52 35 Q47 37.5 43 35Z" fill="#222"/>
+<circle cx="34" cy="35" r="1.1" fill="#fff"/><circle cx="46" cy="35" r="1.1" fill="#fff"/>
+<path d="M27 31 L36 33 M53 31 L44 33" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+<path d="M57 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#9fb3c8"/>
+<circle cx="57" cy="21" r="1.2" fill="#222"/>
+</g></svg>`},
+{id:'twins',name:'ミミ＆ララ',title:'双子',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-twins"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#ffb3c6"/><g clip-path="url(#cp-twins)">
+<path d="M-2 86 Q0 60 24 58 Q48 60 50 86Z" fill="#ff6b9d"/>
+<path d="M30 86 Q32 60 56 58 Q80 60 82 86Z" fill="#6bb3ff"/>
+<rect x="20" y="46" width="8" height="12" fill="#e8b892"/><rect x="52" y="46" width="8" height="12" fill="#e8b892"/>
+<path d="M8 34 L6 54 M40 34 L38 54" stroke="#4a2c2a" stroke-width="4" stroke-linecap="round"/>
+<path d="M40 34 L42 54 M72 34 L74 54" stroke="#4a2c2a" stroke-width="4" stroke-linecap="round"/>
+<circle cx="24" cy="36" r="14" fill="#f6d3b3"/>
+<circle cx="56" cy="36" r="14" fill="#f6d3b3"/>
+<path d="M10 34 Q10 20 24 20 Q38 20 38 34 Q34 27 24 29 Q14 27 10 34Z" fill="#4a2c2a"/>
+<path d="M42 34 Q42 20 56 20 Q70 20 70 34 Q66 27 56 29 Q46 27 42 34Z" fill="#4a2c2a"/>
+<path d="M6 24 L14 28 L6 32Z M22 24 L14 28 L22 32Z" fill="#e03131"/><circle cx="14" cy="28" r="1.5" fill="#e03131"/>
+<path d="M58 24 L66 28 L58 32Z M74 24 L66 28 L74 32Z" fill="#3a6ea5"/><circle cx="66" cy="28" r="1.5" fill="#3a6ea5"/>
+<circle cx="19" cy="38" r="1.8" fill="#333"/><circle cx="29" cy="38" r="1.8" fill="#333"/>
+<path d="M21 44 Q24 46 27 44" stroke="#a0674f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<circle cx="51" cy="38" r="1.8" fill="#333"/><path d="M59 38 Q61 36 63 38" stroke="#333" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M53 44 Q56 47 59 44" stroke="#a0674f" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+{id:'pochi',name:'ポチ',title:'ドラゴンの子',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-pochi"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2f6f4a"/><g clip-path="url(#cp-pochi)">
+<path d="M14 56 L4 40 L22 50Z" fill="#3fa36a"/><path d="M66 56 L76 40 L58 50Z" fill="#3fa36a"/>
+<path d="M60 80 Q78 70 70 56 Q68 68 58 74Z" fill="#5ac27a"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5ac27a"/>
+<path d="M30 58 Q40 66 50 58 L50 86 L30 86Z" fill="#c8f0a8"/>
+<circle cx="40" cy="33" r="20" fill="#5ac27a"/>
+<path d="M28 18 L24 6 L34 14Z" fill="#f3e2a0"/><path d="M52 18 L56 6 L46 14Z" fill="#f3e2a0"/>
+<ellipse cx="40" cy="42" rx="11" ry="7" fill="#c8f0a8"/>
+<circle cx="36" cy="41" r="1.3" fill="#2f4a2a"/><circle cx="44" cy="41" r="1.3" fill="#2f4a2a"/>
+<ellipse cx="32" cy="31" rx="4.5" ry="5.5" fill="#fff"/><ellipse cx="48" cy="31" rx="4.5" ry="5.5" fill="#fff"/>
+<circle cx="33" cy="32" r="2.8" fill="#2f4a2a"/><circle cx="47" cy="32" r="2.8" fill="#2f4a2a"/>
+<circle cx="34" cy="30.8" r="1" fill="#fff"/><circle cx="48" cy="30.8" r="1" fill="#fff"/>
+<path d="M34 47 Q40 51 46 47" stroke="#2f4a2a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+<path d="M44 48 L45 51 L47 48Z" fill="#fff"/>
+</g></svg>`},
+{id:'john',name:'ジョン',title:'老紳士の犬',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-john"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#6b4f3a"/><g clip-path="url(#cp-john)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5a4a3a"/>
+<path d="M33 54 L40 66 L47 54Z" fill="#f5f0e6"/>
+<path d="M31 54 L39 58 L31 62Z M49 54 L41 58 L49 62Z" fill="#6b1e1e"/><circle cx="40" cy="58" r="2" fill="#6b1e1e"/>
+<path d="M20 26 Q12 40 20 54 Q28 48 26 30Z" fill="#8a5a3a"/>
+<path d="M60 26 Q68 40 60 54 Q52 48 54 30Z" fill="#8a5a3a"/>
+<ellipse cx="40" cy="34" rx="19" ry="18" fill="#c89a6a"/>
+<ellipse cx="40" cy="43" rx="10" ry="7" fill="#e0d0c0"/>
+<circle cx="33" cy="33" r="2.4" fill="#3a2a1a"/><circle cx="47" cy="33" r="2.4" fill="#3a2a1a"/>
+<circle cx="47" cy="33" r="5.5" fill="none" stroke="#f3b95f" stroke-width="1.6"/>
+<path d="M52 36 Q56 44 52 50" stroke="#f3b95f" stroke-width="1" fill="none"/>
+<ellipse cx="40" cy="41" rx="3.2" ry="2.4" fill="#2b1b10"/>
+<path d="M40 43 L40 46 M40 46 Q37 48 35 46 M40 46 Q43 48 45 46" stroke="#6b4a3a" stroke-width="1.2" fill="none"/>
+<path d="M28 27 L36 28 M52 27 L44 28" stroke="#d8d0c8" stroke-width="2.2" stroke-linecap="round"/>
+</g></svg>`},
+{id:'takumi',name:'タクミ',title:'配達員',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-takumi"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#e0a030"/><g clip-path="url(#cp-takumi)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#2c5282"/>
+<path d="M14 86 Q16 60 30 58 L34 86Z M66 86 Q64 60 50 58 L46 86Z" fill="#f2e33a"/>
+<path d="M18 72 L32 70 M62 72 L48 70" stroke="#9a9a9a" stroke-width="3"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<circle cx="40" cy="32" r="19" fill="#f2cfae"/>
+<path d="M21 30 Q21 12 40 12 Q59 12 59 30 Q52 22 40 24 Q28 22 21 30Z" fill="#2b2b2b"/>
+<path d="M20 26 Q22 8 40 8 Q58 8 60 26Z" fill="#c0392b"/>
+<path d="M18 26 Q40 22 66 28 L64 31 Q40 26 18 29Z" fill="#a52a22"/>
+<path d="M22 28 Q16 38 22 46" stroke="#333" stroke-width="2.5" fill="none"/>
+<circle cx="22" cy="40" r="3.5" fill="#333"/>
+<path d="M24 43 Q30 48 36 46" stroke="#333" stroke-width="1.8" fill="none"/>
+<circle cx="36" cy="46" r="1.6" fill="#333"/>
+<circle cx="33" cy="36" r="2.2" fill="#333"/><circle cx="47" cy="36" r="2.2" fill="#333"/>
+<path d="M29 31 L36 32 M51 31 L44 32" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round"/>
+<path d="M34 43 Q40 49 46 43Z" fill="#a0674f"/>
+</g></svg>`},
+{id:'sayuri',name:'小百合',title:'演歌歌手',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-sayuri"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#7a1f3a"/><g clip-path="url(#cp-sayuri)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#5b2a7a"/>
+<path d="M24 54 L40 74 L56 54 L60 60 L40 84 L20 60Z" fill="#f5f0e6"/>
+<path d="M28 56 L40 70 L52 56" stroke="#e03131" stroke-width="2" fill="none"/>
+<circle cx="18" cy="70" r="2" fill="#f3b95f"/><circle cx="62" cy="70" r="2" fill="#f3b95f"/><circle cx="24" cy="80" r="2" fill="#f3b95f"/><circle cx="58" cy="80" r="2" fill="#f3b95f"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<path d="M16 30 Q16 4 40 4 Q64 4 64 30 Q58 20 40 20 Q22 20 16 30Z" fill="#1a1a1a"/>
+<circle cx="40" cy="10" r="10" fill="#1a1a1a"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 30 Q21 14 40 14 Q59 14 59 30 Q54 24 40 24 Q26 24 21 30Z" fill="#1a1a1a"/>
+<path d="M56 10 L70 4" stroke="#f3b95f" stroke-width="2" stroke-linecap="round"/>
+<circle cx="70" cy="4" r="3" fill="#e03131"/>
+<path d="M66 8 L66 18 M62 8 L63 16" stroke="#f3b95f" stroke-width="1"/>
+<path d="M29 35 Q33 33 37 35 M43 35 Q47 33 51 35" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<ellipse cx="33" cy="37" rx="2.4" ry="1.6" fill="#333"/><ellipse cx="47" cy="37" rx="2.4" ry="1.6" fill="#333"/>
+<path d="M37 45 Q40 43 43 45 Q40 47.5 37 45Z" fill="#c0392b"/>
+<circle cx="45" cy="42" r=".8" fill="#5a3a2a"/>
+</g></svg>`},
+{id:'chief',name:'ピー長官',title:'ピーの上司',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-chief"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#0b2d4d"/><g clip-path="url(#cp-chief)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#1f3a6a"/>
+<path d="M10 60 L26 56 L28 62 L12 66Z M70 60 L54 56 L52 62 L68 66Z" fill="#f3b95f"/>
+<circle cx="40" cy="66" r="2" fill="#f3b95f"/><circle cx="40" cy="74" r="2" fill="#f3b95f"/>
+<rect x="34" y="46" width="12" height="12" fill="#5ea54a"/>
+<path d="M28 14 Q22 6 18 6 M52 14 Q58 6 62 6" stroke="#5ea54a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<circle cx="18" cy="5" r="3" fill="#b8ff6b"/><circle cx="62" cy="5" r="3" fill="#b8ff6b"/>
+<ellipse cx="40" cy="28" rx="23" ry="22" fill="#5ea54a"/>
+<path d="M20 32 Q40 62 60 32Z" fill="#5ea54a"/>
+<ellipse cx="31" cy="30" rx="6" ry="6" transform="rotate(-10 31 30)" fill="#111"/>
+<ellipse cx="49" cy="30" rx="6" ry="6" transform="rotate(10 49 30)" fill="#111"/>
+<path d="M24 22 L36 26 M56 22 L44 26" stroke="#2f4a2a" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="29" cy="28" r="1.5" fill="#fff" opacity=".9"/><circle cx="47" cy="28" r="1.5" fill="#fff" opacity=".9"/>
+<path d="M35 46 L45 46" stroke="#2f4a2a" stroke-width="1.6" stroke-linecap="round"/>
+</g></svg>`},
+{id:'bones',name:'ボーン船長',title:'海賊',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-bones"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#1f3a4a"/><g clip-path="url(#cp-bones)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#8b1a2b"/>
+<path d="M30 54 L40 68 L50 54 L54 60 L40 78 L26 60Z" fill="#f5f0e6"/>
+<circle cx="40" cy="70" r="1.8" fill="#f3b95f"/><circle cx="40" cy="76" r="1.8" fill="#f3b95f"/>
+<rect x="34" y="44" width="12" height="12" fill="#e9c39c"/>
+<circle cx="40" cy="32" r="19" fill="#e9c39c"/>
+<path d="M24 38 Q26 58 40 60 Q54 58 56 38 Q50 48 40 48 Q30 48 24 38Z" fill="#2b2b2b"/>
+<circle cx="33" cy="36" r="2.4" fill="#333"/>
+<path d="M27 31 L37 33" stroke="#2b2b2b" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="47" cy="36" rx="5" ry="4.5" fill="#222"/>
+<path d="M22 27 L52 33" stroke="#222" stroke-width="1.5"/>
+<path d="M35 45 Q40 48 45 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<path d="M22 22 Q40 6 58 22 Q40 28 22 22Z" fill="#222"/>
+<path d="M12 28 Q40 14 68 28 Q40 36 12 28Z" fill="#111"/>
+<circle cx="40" cy="19" r="3" fill="#fff"/><circle cx="39" cy="18.5" r=".8" fill="#222"/><circle cx="41" cy="18.5" r=".8" fill="#222"/>
+<ellipse cx="66" cy="58" rx="5" ry="7" fill="#2ecc71"/>
+<circle cx="66" cy="49" r="4.5" fill="#2ecc71"/>
+<path d="M69 49 L75 50 L69 52Z" fill="#f3b95f"/>
+<circle cx="65" cy="48" r="1" fill="#222"/>
+<path d="M62 54 L58 62" stroke="#e03131" stroke-width="2"/>
+</g></svg>`},
+{id:'el',name:'エル',title:'天使',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-el"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#cfe3ff"/><g clip-path="url(#cp-el)">
+<path d="M18 62 Q0 50 8 36 Q14 48 24 52Z" fill="#fff"/>
+<path d="M62 62 Q80 50 72 36 Q66 48 56 52Z" fill="#fff"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#f7f4ec"/>
+<rect x="34" y="44" width="12" height="12" fill="#e8b892"/>
+<path d="M18 30 Q18 8 40 8 Q62 8 62 30 L62 50 Q40 56 18 50Z" fill="#f2d16b"/>
+<circle cx="40" cy="32" r="19" fill="#f6d3b3"/>
+<path d="M21 32 Q21 12 40 12 Q59 12 59 32 Q54 24 46 26 Q40 22 30 26 Q24 24 21 32Z" fill="#f2d16b"/>
+<ellipse cx="40" cy="8" rx="14" ry="3.5" fill="none" stroke="#f3b95f" stroke-width="2.5"/>
+<path d="M29 36 Q33 33 37 36 M43 36 Q47 33 51 36" stroke="#333" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<circle cx="29" cy="41" r="2.5" fill="#f4a3a3" opacity=".6"/><circle cx="51" cy="41" r="2.5" fill="#f4a3a3" opacity=".6"/>
+<path d="M36 45 Q40 47.5 44 45" stroke="#a0674f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>`},
+{id:'bell',name:'ベル',title:'悪魔',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-bell"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#3a0a0a"/><g clip-path="url(#cp-bell)">
+<path d="M60 84 Q78 76 70 62" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M70 62 L65 58 L75 57Z" fill="#c0392b"/>
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#111"/>
+<path d="M33 54 L40 66 L47 54Z" fill="#fff"/>
+<path d="M38 58 L42 58 L43 68 L40 72 L37 68Z" fill="#c0392b"/>
+<rect x="34" y="44" width="12" height="12" fill="#c0392b"/>
+<circle cx="40" cy="32" r="19" fill="#e0392b"/>
+<path d="M21 30 Q21 12 40 12 Q59 12 59 30 Q52 22 40 26 Q28 22 21 30Z" fill="#111"/>
+<path d="M26 20 L20 8 L32 16Z" fill="#111"/><path d="M54 20 L60 8 L48 16Z" fill="#111"/>
+<ellipse cx="33" cy="36" rx="3" ry="2.6" fill="#f3e25f"/><ellipse cx="47" cy="36" rx="3" ry="2.6" fill="#f3e25f"/>
+<ellipse cx="33" cy="36" rx="1" ry="2.2" fill="#111"/><ellipse cx="47" cy="36" rx="1" ry="2.2" fill="#111"/>
+<path d="M28 31 L36 33 M52 31 L44 33" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+<path d="M33 44 Q40 50 47 43" stroke="#5a0a0a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<path d="M44 44.5 L43 48.5 L41.5 45Z" fill="#fff"/>
+</g></svg>`},
+{id:'doc',name:'ドク',title:'考古学者',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-doc"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#8a7a5a"/><g clip-path="url(#cp-doc)">
+<path d="M6 86 Q8 56 40 54 Q72 56 74 86Z" fill="#b8a77a"/>
+<path d="M33 54 L40 64 L47 54Z" fill="#8a7a5a"/>
+<rect x="20" y="64" width="9" height="8" rx="1" fill="#9a8a60" stroke="#6a5a3a" stroke-width="1"/>
+<rect x="51" y="64" width="9" height="8" rx="1" fill="#9a8a60" stroke="#6a5a3a" stroke-width="1"/>
+<rect x="34" y="44" width="12" height="12" fill="#e2b48e"/>
+<circle cx="40" cy="32" r="19" fill="#f0c9a0"/>
+<path d="M24 38 Q26 58 40 60 Q54 58 56 38 Q50 46 40 46 Q30 46 24 38Z" fill="#d8d0c8"/>
+<circle cx="33" cy="35" r="5" fill="#dff0ff" fill-opacity=".5" stroke="#333" stroke-width="1.5"/>
+<circle cx="47" cy="35" r="5" fill="#dff0ff" fill-opacity=".5" stroke="#333" stroke-width="1.5"/>
+<path d="M38 35 L42 35" stroke="#333" stroke-width="1.5"/>
+<circle cx="33" cy="35" r="1.5" fill="#333"/><circle cx="47" cy="35" r="1.5" fill="#333"/>
+<path d="M36 44 Q40 46 44 44" stroke="#8a5a3a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+<path d="M20 26 Q22 8 40 8 Q58 8 60 26Z" fill="#e8dcc0"/>
+<ellipse cx="40" cy="26" rx="26" ry="5" fill="#d8ccb0"/>
+<path d="M22 22 Q40 19 58 22 L58 25 Q40 22 22 25Z" fill="#6a5a3a"/>
+</g></svg>`},
+{id:'kero',name:'ケロ',title:'カエルの王子',svg:`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><defs><clipPath id="cp-kero"><circle cx="40" cy="40" r="40"/></clipPath></defs><circle cx="40" cy="40" r="40" fill="#2a5a3a"/><g clip-path="url(#cp-kero)">
+<path d="M8 86 Q10 58 40 56 Q70 58 72 86Z" fill="#3a6ea5"/>
+<circle cx="24" cy="58" r="5" fill="#fff"/><circle cx="32" cy="55" r="5" fill="#fff"/><circle cx="40" cy="54" r="5" fill="#fff"/><circle cx="48" cy="55" r="5" fill="#fff"/><circle cx="56" cy="58" r="5" fill="#fff"/>
+<ellipse cx="40" cy="36" rx="22" ry="17" fill="#5ac27a"/>
+<circle cx="28" cy="22" r="8" fill="#5ac27a"/><circle cx="52" cy="22" r="8" fill="#5ac27a"/>
+<circle cx="28" cy="22" r="5" fill="#fff"/><circle cx="52" cy="22" r="5" fill="#fff"/>
+<circle cx="29" cy="23" r="2.5" fill="#222"/><circle cx="51" cy="23" r="2.5" fill="#222"/>
+<path d="M34 12 L36 4 L40 9 L44 4 L46 12Z" fill="#f3b95f"/>
+<path d="M24 40 Q40 52 56 40" stroke="#2f5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+<circle cx="24" cy="38" r="3" fill="#f4a3a3" opacity=".5"/><circle cx="56" cy="38" r="3" fill="#f4a3a3" opacity=".5"/>
+<circle cx="37" cy="33" r="1" fill="#2f5a3a"/><circle cx="43" cy="33" r="1" fill="#2f5a3a"/>
+</g></svg>`},
+];
+document.getElementById('g').innerHTML=NEWCHARS.map(c=>`<div class="c"><div class="art">${c.svg}</div><b>${c.name}</b><small>${c.title}</small></div>`).join('');
+</script>
+</body></html>
