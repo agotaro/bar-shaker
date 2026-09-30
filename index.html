@@ -59,6 +59,7 @@ header .title{font-weight:700;font-size:18px;letter-spacing:.02em}
 .bubble:before{content:"";position:absolute;left:-8px;top:18px;border:8px solid transparent;border-right-color:#fff8ee;border-left:0}
 .bubble .type{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#2a1c22;color:#fff;margin-bottom:6px;letter-spacing:.05em}
 .bubble .muted{color:#8a7a80}
+.bubble .moodchip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:#ffe3a8;color:#4a3210;margin:0 0 6px 6px;font-weight:700}
 .bubble .pay{margin-top:6px;font-size:14px}
 .busy{margin-top:12px}
 .busy-label{font-size:13px;color:var(--info);margin-bottom:4px}
@@ -506,7 +507,14 @@ const ECON={
   normal:{name:'普通',desc:'毎晩の家賃あり。払えなければ閉店。',rent:1,price:1,rank:1},
   hard:{name:'シビア',desc:'家賃が高く、仕入れも高い。赤字は即閉店。',rent:1.8,price:1.25,rank:0.8},
 };
-const PATIENCE={named:30,abstract:25,omakase:25,wild:20,repeat:30,usual:30,substitute:25};
+const PATIENCE={named:30,abstract:25,omakase:25,wild:20,repeat:30,usual:30,substitute:25,like:28,mood:25,same:28};
+const MOODS={
+  tired:{icon:'😮‍💨',name:'疲れてる',hint:'さっぱりしたのがいいな。強いのはちょっと…',want:{fresh:2},maxSpirits:1,ok:'…はぁ、ほぐれる',ng:'疲れが取れないよ'},
+  hyped:{icon:'🎉',name:'浮かれてる',hint:'甘くて楽しいやつ！お酒は入れてね',want:{sweet:2},minStrong:3,ok:'イエーイ！最高！',ng:'テンション下がるー'},
+  down:{icon:'🌧️',name:'落ち込んでる',hint:'染みるやつを。甘いのは要らない',minStrong:3,maxSweet:2,ok:'…染みる',ng:'…違うんだよなあ'},
+  rush:{icon:'⏱️',name:'急いでる',hint:'なんでもいいから、早く！',minCount:2,ok:'助かる！じゃ！',ng:'遅い！',patience:0.55,pay:1.3},
+};
+const mocktail=c=>{const ids=c.ings.filter(id=>!BY_ID[id].tags.strong);if(ids.length<2)ids.push(ids.includes('lime')?'soda':'lime');return ids};
 const BADGE={perfect:'😆',partial:'😐',fail:'😠',left:'💨'};
 const SAVE_KEY='barshaker.v2', HI_KEY='barshaker.hi';
 const OPEN=19, CLOSE=26, LAST=25.5, SEC_PER_HOUR=24;
@@ -530,7 +538,7 @@ const rentNow=()=>Math.round(D.rent*E.rent);
 const priceOf=i=>Math.round(i.price*E.price/10)*10;
 
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
-function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;if(g&&!ECON[g.econ])g.econ='normal';if(g&&g.score===undefined)g.score=0;return g&&DIFF[g.diff]?g:null}catch(e){return null}}
+function load(){try{const s=localStorage.getItem(SAVE_KEY);const g=s?JSON.parse(s):null;if(g&&!ECON[g.econ])g.econ='normal';if(g&&g.score===undefined)g.score=0;if(g&&!g.moodKnown)g.moodKnown={};return g&&DIFF[g.diff]?g:null}catch(e){return null}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
 function loadHi(){try{return JSON.parse(localStorage.getItem(HI_KEY))||{}}catch(e){return {}}}
 function saveHi(h){try{localStorage.setItem(HI_KEY,JSON.stringify(h))}catch(e){}}
@@ -538,7 +546,7 @@ function hiKey(){return G.diff+'-'+G.econ}
 function initMem(){CHARS.forEach(c=>{const m=G.mem[c.id]||(G.mem[c.id]={visits:0,aff:0,last:null,skip:false,prefKnown:false});if(m.usual===undefined)m.usual=null})}
 
 function newGame(diff,econ){
-  G={diff,econ:econ||'normal',night:1,money:1000,score:0,stock:{},mem:{},learned:{},history:[]};
+  G={diff,econ:econ||'normal',night:1,money:1000,score:0,stock:{},mem:{},learned:{},moodKnown:{},history:[]};
   ING.forEach(i=>G.stock[i.id]=i.cap);
   initMem(); save(); startNight();
 }
@@ -549,9 +557,13 @@ const namedOrder=ch=>{
   const c=rnd(COCKTAILS);
   const o={kind:'named',cocktail:c,text:`${c.name}、ひとつ。`,label:'カクテル',summary:c.name,pay:450};
   const spirit=c.ings.find(id=>BY_ID[id].tags.strong);
-  if(ch&&spirit&&c.ings.length<=3&&Math.random()<0.3){
+  if(ch&&spirit&&c.ings.length<=3&&Math.random()<0.35){
     if(ch.likes.includes('strong')){o.mod='strong';o.text=`${c.name}、濃いめで。`;o.summary=`${c.name}（濃いめ）`;o.pay=520}
-    else if(ch.hates.includes('strong')){o.mod='weak';o.text=`${c.name}。明日早いから、薄めで。`;o.summary=`${c.name}（薄め）`;o.pay=480}
+    else if(ch.hates.includes('strong')&&Math.random()<0.5){o.mod='weak';o.text=`${c.name}。明日早いから、薄めで。`;o.summary=`${c.name}（薄め）`;o.pay=480}
+    else if(ch.hates.includes('strong')){
+      o.mod='na';o.na=mocktail(c);const added=o.na.find(id=>!c.ings.includes(id));
+      o.text=`${c.name}のノンアルで。${BY_ID[spirit].name}抜き${added?'で、'+BY_ID[added].name+'を足して':'で'}ね。`;o.summary=`${c.name}（ノンアル）`;o.pay=430;
+    }
   }
   return o;
 };
@@ -568,11 +580,19 @@ function makeOrder(ch,m,ns){
     const text=m.aff<=1?`前回と同じの。えっと、${BY_ID[key].name}が入ってたやつ。`:'また来たよ。前回と同じの、もう一杯。';
     return {kind:'repeat',glass:last,text,label:'前回と同じ',summary:'前回と同じ',pay:480};
   }
-  const r=Math.random();
+  const r=Math.random()*100;
   const absC=ABSTRACT.filter(a=>a.who.includes(ch.id)), wildC=WILD.filter(w=>w.who.includes(ch.id));
-  if(r<0.45) return namedOrder(ch);
-  if(r<0.65&&absC.length){const d=rnd(absC);return {kind:'abstract',def:d,text:d.text,label:'ふわっとした注文',summary:'ふわっと',pay:450}}
-  if(r<0.78) return {kind:'omakase',text:'おまかせで。',label:'おまかせ',summary:'おまかせ',pay:450};
+  if(r<30) return namedOrder(ch);
+  if(r<42&&absC.length){const d=rnd(absC);return {kind:'abstract',def:d,text:d.text,label:'ふわっとした注文',summary:'ふわっと',pay:450}}
+  if(r<50) return {kind:'omakase',text:'おまかせで。',label:'おまかせ',summary:'おまかせ',pay:450};
+  if(r<62){
+    const keys=Object.keys(MOODS).filter(k=>!(k==='hyped'&&ch.hates.includes('strong'))&&!(k==='down'&&ch.hates.includes('strong')));
+    const mk=rnd(keys), md=MOODS[mk];
+    return {kind:'mood',moodKey:mk,mood:md,text:mk==='rush'?'なんでもいい、早く！':'今日はなんか、こう…ね？',label:'今日の気分',summary:`${md.icon} ${md.name}`,pay:Math.round(450*(md.pay||1))};
+  }
+  if(r<72){const c=rnd(COCKTAILS.filter(x=>x.ings.length>=2));return {kind:'like',cocktail:c,text:`${c.name}っぽいの、なんか作って。`,label:'アレンジ',summary:`${c.name}っぽい`,pay:500}}
+  if(r<80&&ns.lastDrink){const ld=ns.lastDrink;if(ld.name!==ch.name)return {kind:'same',glass:ld.ids,text:`さっき${ld.name}が飲んでたやつ、同じのを。`,label:'同じもの',summary:`${ld.name}と同じ`,pay:470}}
+  if(r<85){const c=rnd(COCKTAILS.filter(x=>x.ings.length<=3));return {kind:'named',cocktail:c,count:3,served:0,grades:[],money:0,text:`${c.name}を3杯！みんなで乾杯するんだ。`,label:'乾杯',summary:`${c.name} ×3`,pay:450}}
   const w=rnd(wildC.length?wildC:WILD);
   return {kind:'wild',def:w,text:w.text,label:'無茶ぶり',summary:'無茶ぶり'};
 }
@@ -606,7 +626,7 @@ function startNight(){
   D=DIFF[G.diff]; E=ECON[G.econ];
   const absent=CHARS.filter(c=>G.mem[c.id].skip).map(c=>c.id);
   CHARS.forEach(c=>{G.mem[c.id].skip=false});
-  N={seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,score:0,combo:0,maxCombo:0,perfect:0,customers:0,visits:{},mem:0,wild:0,results:[],notes:[],busy:null,clock:OPEN,sinceArrival:99,nextDelay:0,exhausted:false,ending:false,timer:null,lastActive:null,absent};
+  N={seats:Array(D.seats).fill(null),active:-1,glass:[],sales:0,score:0,combo:0,maxCombo:0,perfect:0,customers:0,visits:{},mem:0,wild:0,lastDrink:null,results:[],notes:[],busy:null,clock:OPEN,sinceArrival:99,nextDelay:0,exhausted:false,ending:false,timer:null,lastActive:null,absent};
   $('overlay').hidden=true;
   $('recipes').hidden=!D.book;
   $('busy').hidden=true;
@@ -629,6 +649,8 @@ function seatNext(i,a){
     G.learned[o.cocktail.name]=true;
   }
   if(o.kind==='omakase'&&D.tell&&!m.prefKnown){cust.text=`おまかせで。${ch.pref}`;m.prefKnown=true}
+  if(o.kind==='mood'){if(D.tell&&!G.moodKnown[o.moodKey]){cust.text+=' '+o.mood.hint;G.moodKnown[o.moodKey]=true}if(o.mood.patience)cust.patienceMax*=o.mood.patience,cust.patience=cust.patienceMax}
+  if(o.count>1){cust.patienceMax*=1.8;cust.patience=cust.patienceMax}
   if(o.revisit) cust.text='また来ちゃった。'+cust.text;
   N.customers++;
   N.seats[i]=cust; N.sinceArrival=0; N.nextDelay=arrivalGap();
@@ -675,14 +697,25 @@ function removeIng(id){if(!canMix())return;const i=N.glass.map(g=>g.id).lastInde
 function serve(){
   const cust=activeCust(); if(!canMix()) return;
   if(!N.glass.length){toast('グラスが空だよ！');shakeGlass();return}
-  const res=evaluate(cust);
+  const o=cust.order, res=evaluate(cust);
   N.glass.forEach(i=>{G.stock[i.id]=Math.max(0,G.stock[i.id]-1)});
   const ids=N.glass.map(i=>i.id);
   N.glass=[];
+  if(res.grade!=='fail') N.lastDrink={ids,name:cust.char.name};
+  if(o.count>1){
+    o.grades.push(res.grade); o.money+=res.money; o.served++;
+    if(res.grade!=='fail'&&o.served<o.count){
+      cust.text=`${o.cocktail.name}、あと${o.count-o.served}杯！`; toast(`${o.served}杯目、OK`);
+      renderShelf(); renderActive(); renderBar(); return;
+    }
+    const grade=res.grade==='fail'?'fail':o.grades.includes('partial')?'partial':'perfect';
+    const line=grade==='fail'?res.line:grade==='perfect'?`${cust.char.lines.ok} 乾杯！`:`${cust.char.lines.meh}（1杯、違うのが混ざってた）`;
+    finishCust(cust,{grade,money:Math.round(o.money*0.8),line},ids); return;
+  }
   finishCust(cust,res,ids);
 }
 
-function requiredIds(o){return o.kind==='named'?o.cocktail.ings:(o.kind==='repeat'||o.kind==='usual')?o.glass:[]}
+function requiredIds(o){return o.kind==='named'?(o.mod==='na'?o.na:o.cocktail.ings):(o.kind==='repeat'||o.kind==='usual'||o.kind==='same')?o.glass:[]}
 function substitute(){
   const cust=activeCust(); if(!cust||cust.done||N.busy) return;
   const ch=cust.char, m=G.mem[ch.id];
@@ -719,7 +752,34 @@ function evaluate(cust){
   const pay=g=>g==='perfect'?Math.round((o.pay+150*speed)*affMult):g==='partial'?Math.round(o.pay*0.4):0;
   const got=glass.map(i=>i.id), b=balance(glass), distinct=new Set(got).size;
   let grade,line,bonus=0;
-  if(o.kind==='named'){
+  if(o.kind==='named'&&o.mod==='na'){
+    const target=o.na, c=countsOf(got);
+    const spirits=got.filter(id=>BY_ID[id].tags.strong);
+    const missing=target.filter(x=>!c[x]), extra=Object.keys(c).filter(x=>!target.includes(x));
+    if(spirits.length){grade='fail';line=`${L.ng}（ノンアルって言ったのに！${BY_ID[spirits[0]].name}入ってる）`}
+    else if(!missing.length&&!extra.length){grade='perfect';line=`${L.ok} 明日も頑張れる`}
+    else{const j=(target.length-missing.length)/(target.length+extra.length);grade=j>=0.5?'partial':'fail';line=`${grade==='partial'?L.meh:L.ng}（${missing.length?`${BY_ID[missing[0]].name}が足りない気がする`:`${BY_ID[extra[0]].name}は余計かも`}）`}
+  }else if(o.kind==='like'){
+    const X=o.cocktail, j=msJaccard(got,X.ings), same=matchCocktail(glass)===X;
+    if(same){grade='partial';line=`${L.meh}（それ、そのまま${X.name}じゃない？）`}
+    else if(j<0.5){grade='fail';line=`${L.ng}（${X.name}の面影がない…）`}
+    else if(b.tooStrong){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    else if(b.tooSweet){grade='partial';line='…甘すぎ。歯が溶けそう'}
+    else{grade='perfect';const extra=got.find(id=>!X.ings.includes(id)),miss=X.ings.find(id=>!got.includes(id));line=extra?`お、${BY_ID[extra].name}を足したか。${L.ok}`:miss?`${BY_ID[miss].name}抜きか、いいね。${L.ok}`:`${L.ok} 濃さを変えてきたね`}
+  }else if(o.kind==='mood'){
+    const md=o.mood, p=profile(glass), conds=[];
+    if(md.want) for(const k in md.want) conds.push((p[k]||0)>=md.want[k]);
+    if(md.minStrong) conds.push((p.strong||0)>=md.minStrong);
+    if(md.maxSweet!=null) conds.push((p.sweet||0)<=md.maxSweet);
+    if(md.maxSpirits!=null) conds.push(b.spirits<=md.maxSpirits);
+    if(md.minCount) conds.push(distinct>=md.minCount);
+    const score=conds.length?conds.filter(Boolean).length/conds.length:1;
+    grade=score===1?'perfect':score>=0.5?'partial':'fail';
+    if(distinct<2&&grade==='perfect') grade='partial';
+    if(grade==='perfect'&&b.tooStrong&&!(md.minStrong>=5)){grade='partial';line='…強すぎる。何杯分入れたの？'}
+    if(grade==='perfect'&&b.tooSweet&&!(md.want&&md.want.sweet>=3)){grade='partial';line='…甘すぎ。歯が溶けそう'}
+    if(!line) line=grade==='perfect'?md.ok:`${md.ng}${D.tell?`（${md.hint}）`:''}`;
+  }else if(o.kind==='named'){
     const target=o.cocktail.ings, c=countsOf(got);
     const missing=target.filter(x=>!c[x]), extra=Object.keys(c).filter(x=>!target.includes(x));
     if(missing.length||extra.length){
@@ -736,10 +796,10 @@ function evaluate(cust){
       else if(!mod){grade='partial';line=`${L.meh}（${v==='strong'?'濃すぎる':v==='weak'?'薄い…':'量が多すぎ'}）`}
       else{grade='partial';line=`${L.meh}（${mod==='strong'?'濃いめって言ったのに':'薄めって言ったのに'}）`}
     }
-  }else if(o.kind==='repeat'||o.kind==='usual'){
+  }else if(o.kind==='repeat'||o.kind==='usual'||o.kind==='same'){
     const j=msJaccard(got,o.glass);
     grade=j===1?'perfect':j>=0.5?'partial':'fail';
-    line=grade==='perfect'?(o.kind==='usual'?`${L.ok} さすが、覚えてるね`:L.ok):`${grade==='partial'?L.meh:L.ng}（${j>=0.5?'前のと少し違う…':'前のと違う…'}）`;
+    line=grade==='perfect'?(o.kind==='usual'?`${L.ok} さすが、覚えてるね`:o.kind==='same'?`${L.ok} 見てたんだ`:L.ok):`${grade==='partial'?L.meh:L.ng}（${o.kind==='same'?(j>=0.5?'さっきのと少し違う…':'さっきのと違う…'):(j>=0.5?'前のと少し違う…':'前のと違う…')}）`;
   }else if(o.kind==='abstract'){
     const d=o.def, p=profile(glass), conds=[];
     for(const k in (d.want||{})) conds.push((p[k]||0)>=d.want[k]);
@@ -781,7 +841,7 @@ function finishCust(cust,res,ids){
   if(res.grade==='perfect'){
     N.perfect++; N.combo++; N.maxCombo=Math.max(N.maxCombo,N.combo);
     const speed=Math.max(0,cust.patience/cust.patienceMax), k=cust.order.kind;
-    const base=100*(1+speed)+(k==='usual'||k==='repeat'?50:0)+(cust.order.mod?30:0)+10*(G.mem[cust.char.id].aff||0);
+    const base=100*(1+speed)+(k==='usual'||k==='repeat'||k==='same'?50:0)+(k==='like'||k==='mood'?40:0)+(cust.order.count>1?60:0)+(cust.order.mod?30:0)+10*(G.mem[cust.char.id].aff||0);
     pts=Math.round(base*Math.min(2,1+0.1*(N.combo-1)));
   }else if(res.grade==='partial'){pts=30;N.combo=0}
   else N.combo=0;
@@ -834,7 +894,8 @@ function renderActive(){
     b.innerHTML=`<div>${esc(r.line)}</div><div class="pay">${tag}${pts}</div>`;
   }else{
     $('face').textContent='';
-    b.innerHTML=`<span class="type">${cust.order.label}</span><div>${esc(cust.text)}</div>`;
+    const mood=cust.order.kind==='mood'?`<span class="moodchip">${cust.order.mood.icon} ${cust.order.mood.name}</span>`:'';
+    b.innerHTML=`<span class="type">${cust.order.label}</span>${mood}<div>${esc(cust.text)}</div>`;
   }
   b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');
 }
