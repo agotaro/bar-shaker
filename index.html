@@ -1142,7 +1142,7 @@ function seatNext(i,a){
     cust.text=`${o.cocktail.name}、ひとつ。${o.cocktail.ings.map(x=>BY_ID[x].name).join('と')}で作ってね。`;
     learn(o.cocktail.name);
   }
-  if(o.kind==='omakase'&&D.tell&&!m.prefKnown){cust.text=`おまかせで。${ch.pref}`;m.prefKnown=true}
+  if(o.kind==='omakase'&&D.tell&&!m.prefKnown){cust.text=`${cust.text} ${ch.pref}`;m.prefKnown=true}
   if(o.kind==='mood'){if(D.tell&&!G.moodKnown[o.moodKey]){cust.text+=' '+o.mood.hint;G.moodKnown[o.moodKey]=true}if(o.mood.patience)cust.patienceMax*=o.mood.patience,cust.patience=cust.patienceMax}
   if(o.count>1){cust.patienceMax*=1.8;cust.patience=cust.patienceMax}
   if(o.revisit) cust.text='また来ちゃった。'+cust.text;
